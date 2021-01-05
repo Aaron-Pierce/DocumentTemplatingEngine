@@ -8,12 +8,7 @@
 
 use actix_files as fs;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-use std::{
-    fmt::format,
-    fs::{read_to_string, Permissions},
-    path::Path,
-    str::CharIndices,
-};
+use std::{fs::read_to_string, path::Path};
 
 const TEMPLATE_LOCATION: &str = "./src/templates/";
 const ARTICLE_LOCATION: &str = "./src/articles/";
@@ -23,11 +18,24 @@ fn expand_bang(bang_name: &str, args: Vec<String>) -> String {
         "makeTitle" => {
             let mut template_data =
                 read_to_string(format!("{}{}", TEMPLATE_LOCATION, "title.html")).unwrap();
+
             template_data = template_data.replace(
                 "*+*",
                 args.get(0).unwrap_or(&String::from("Error: Title Missing")),
             );
             template_data = template_data.replace("?*?", args.get(1).unwrap_or(&String::from("")));
+
+            return template_data;
+        }
+        "archiveEntry" => {
+            let mut template_data =
+                read_to_string(format!("{}{}", TEMPLATE_LOCATION, "archiveEntry.html")).unwrap();
+
+            template_data = template_data.replace("?+?", args.get(0).unwrap_or(&String::from("")));
+
+            template_data = template_data.replace("*+*", args.get(1).unwrap_or(&String::from("")));
+
+            template_data = template_data.replace("?d", args.get(2).unwrap_or(&String::from("")));
             return template_data;
         }
         _ => String::new(),
@@ -112,29 +120,18 @@ fn build_template(template_name: &String, reverse_template_content: Option<&Stri
     }
 
     while template_data.contains("${") {
-        let template_start_index = template_data.find("${").unwrap();
-        let mut template_name = String::new();
-        let mut template_char_iterator = template_data.chars().peekable();
-        template_char_iterator.nth(template_start_index + 1);
-        while template_char_iterator.peek().is_some() {
-            let ch = template_char_iterator.next();
-            if ch.is_some() && ch.unwrap() != '}' {
-                template_name.push(ch.unwrap());
-            } else {
-                break;
-            }
-        }
-        if template_name.starts_with("-") && reverse_template_content.is_some() {
+        let parsed = parse_command(&template_data, "${*}");
+        if parsed.name.starts_with("-") && reverse_template_content.is_some() {
             //this is the reverse template
             template_data.replace_range(
-                template_start_index..(template_start_index + 3 + template_name.len()),
+                parsed.start_index..(parsed.start_index + parsed.total_length),
                 reverse_template_content.unwrap(),
             );
             return template_data;
         }
         template_data.replace_range(
-            template_start_index..(template_start_index + 3 + template_name.len()),
-            &build_template(&template_name, None)[..],
+            parsed.start_index..(parsed.start_index + parsed.total_length),
+            &build_template(&parsed.name, None)[..],
         )
     }
 
@@ -174,22 +171,11 @@ fn build_article(article_name: &String) -> String {
     }
 
     while article_data.contains("${") {
-        let template_start_index = article_data.find("${").unwrap();
-        let mut template_name = String::new();
-        let mut template_char_iterator = article_data.chars().peekable();
-        template_char_iterator.nth(template_start_index + 1);
-        while template_char_iterator.peek().is_some() {
-            let ch = template_char_iterator.next();
-            if ch.is_some() && ch.unwrap() != '}' {
-                template_name.push(ch.unwrap());
-            } else {
-                break;
-            }
-        }
+        let parsed = parse_command(&article_data, "${*}");
         article_data.replace_range(
-            template_start_index..(template_start_index + 3 + template_name.len()),
-            &build_template(&template_name, None)[..],
-        )
+            parsed.start_index..(parsed.start_index + parsed.total_length),
+            &build_template(&parsed.name, None)[..],
+        );
     }
 
     match reverse_template {
@@ -204,25 +190,60 @@ async fn manual_hello() -> impl Responder {
         .body(build_article(&String::from("test")))
 }
 
+fn compile(name: &String) {
+    use std::fs::File;
+    use std::io::Write;
+
+    println!("Requested compile of {:?}", name);
+
+    let built_article = build_article(name);
+    let build_path = Path::new("./built/");
+    match std::fs::create_dir(build_path) {
+        Ok(_) => (),
+        Err(err) => {
+            match err.kind() {
+                std::io::ErrorKind::AlreadyExists => {}
+                _ => {
+                    //induce a panic
+                    panic!(err);
+                }
+            }
+        }
+    }
+    let destination_path = build_path.join(format!("{}{}", name, ".html"));
+    let mut file = File::create(destination_path)
+        .expect("Could not touch file. Do you have write permission?");
+    file.write_all(built_article.as_bytes())
+        .expect("Could not write file. Do you have write permissions?");
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mut args = std::env::args();
     args.next();
     args.for_each(|e| {
-        use std::fs::File;
-        use std::io::Write;
-        let built_article = build_article(&e);
-        let build_path = Path::new("./built/");
-        std::fs::create_dir(build_path);
-        let destination_path = build_path.join(format!("{}{}", e, ".html"));
-        let mut file = File::create(destination_path);
-        file.unwrap().write_all(built_article.as_bytes());
+        if e == "all" {
+            std::fs::read_dir(ARTICLE_LOCATION)
+                .unwrap()
+                .for_each(|file_result| {
+                    if file_result.is_ok() {
+                        let file_name = file_result.unwrap().file_name();
+                        match file_name.to_string_lossy().strip_suffix(".html") {
+                            Some(filename) => compile(&filename.to_string()),
+                            None => {}
+                        }
+                    }
+                })
+        } else {
+            compile(&e);
+        }
     });
 
     let result = HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(manual_hello))
             .service(fs::Files::new("/public", "./src/public/"))
+            .service(fs::Files::new("/built", "./built"))
     })
     .bind("192.168.1.196:8080")?
     .bind("127.0.0.1:8080")?
