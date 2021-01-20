@@ -64,9 +64,21 @@ impl<'a> Compiler<'a>{
     
     fn build(&self, template_location: &String, reverse_template_content: Option<&String>) -> String {
         println!("Built template request: {:#?}", template_location);
-        let mut template_data =
-            read_to_string(template_location).unwrap();
+        let template_data_result =read_to_string(template_location);
     
+        let mut template_data = match template_data_result {
+            Ok(data) => data,
+            Err(err) => {
+                eprintln!("{:?}", err);
+                String::new()
+            }
+        };
+
+        if template_data.len() == 0 {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+            template_data = read_to_string(template_location).unwrap();
+        }
+
         let first_line = template_data.lines().next().unwrap();
     
         let reverse_template: Option<String>;

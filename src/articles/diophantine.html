@@ -1,0 +1,122 @@
+*articleSkeleton
+!{makeTitle}[Diophantine Equations][January 19, 2021]
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<p>
+    My arcade basketball goal can display any two digit natural number, and I can prove it thanks to some long dead guy.
+</p>
+<p>
+    The goal has a 60 second timer and a display that can show two digits.
+    In the first 45 seconds all shots are worth 2 points, and in the last 15 seconds they're worth 3 points.
+</p>
+
+<p>
+    The number on the display can be calculated as
+    \( 2x + 3y = D\)
+    where $x$ is the number of two point shots you made, $y$ is the number of 3 point shots you made,
+    and $D$ is your final score that will be displayed.
+    How can we be sure that D can be any natural number? (101 is displayed as 1, because there are only two digits in the display)
+</p>
+
+<p>
+    The above equation is an example of a Diophantine Equation, which is an equation that only cares about integer inputs and outputs.
+    (Diophantus is the long dead guy in question).
+    We only care about integer inputs and outputs because you can't make half a shot, so you also can't finish with half a point, too.
+</p>
+<p>
+    Only caring about integer inputs and outputs ensures that the equation always makes sense, but it adds some difficulty in working with the equation.
+    If we let that equation vary over all real numbers, for instance, $D$ can easily take on any value by letting $y=0$ and letting $x=\frac{D}{2}$.
+    However, if $x$, $y$, and $D$, are all integers, then $x=\frac{D}{2}$ is only sometimes allowed, namely when $D$ is even.
+</p>
+<p>
+    That insight is still useful, though.
+    We've given a language to the intuitive understanding that we can easily score any even score on the basketball arcade game.
+    You just shoot half of your desired score as baskets, and we know that's mathematically possible because our Diophantine Equation
+    has a solution for any $D$, which is $x = \frac{D}{2}, y = 0$.
+</p>
+<p>
+    What about the odd numbers, then?
+    If they're a multiple of 3 then we can also get to them by the same logic.
+    But there are a lot of numbers that aren't a multiple of 3 or 2, like 7, or 11, or 17.
+    There are a couple of tricks you could employ to get from here to a definite answer.
+    One of them is that by subtracting 3 from any odd number, you get an even number, and we can always make an even number, so a sort of algorithm emerges.
+    If your desired score is even, we can do it, and if it's not even, we will shoot one three-pointer, and the remaining balance will have to be even,
+    so we can just shoot two-pointers to get that score.
+</p>
+<p>
+    The Diophantine way to solve this problem is to assert that the greatest common factor of 3 and 2 is 1,
+    so you can therefore reach every number.
+    Let's explore why any of that makes sense.
+</p>
+<p>
+    First off, imagine that the three-pointers didn't exist for a second.
+    We can only reach even numbers, because we only have a multiples of 2 to work with.
+    Similarly, if we had two-pointers and six-pointers to shoot, we still can only reach even numbers because 6 is itself a multiple of 2.
+    So if we want to get to an odd number, we need some of the shots to be worth an odd number, 
+    because if they're both worth an even number, then it's impossible to finish with an odd score.
+</p>
+<p>
+    This pretty naturally leads us to want one of our scores to be even, and the other to be odd.
+    However, we'd be missing quite a lot if we just left it at that.
+    For example, if we had six-pointers and three-pointers, we have an even and odd pair, but we can't reach every number,
+    because no matter how we combine three-pointers and six-pointers, our final score will always be a multiple of 3.
+    We can prove that as follows:
+    \[ 3x + 6y = 3(x + 2y) \]
+    So our score will be 3 times some number, so it will necessarily be a multiple of 3.
+</p>
+<p>
+    So if we pick any two numbers that share a factor, then we can pull that factor out of the whole equation, 
+    and it will force the equation to only have solutions that are a multiple of that factor.
+    For example, the general form of our basketball equation is $ax + by = D$.
+    Where a and b are the two possible point values for a basket.
+    So for the initial basketball equation, $a = 2$ and $b = 3$, representing that we can shoot two-pointers and three-pointers.
+</p>
+<p>
+    If $a$ and $b$ share a factor, then they can be represented as follows:
+    \[ a = nc \]
+    \[ b = mc \]
+    Where $c$ is the common factor, and $n$ and $m$ are some integer.
+    So in our three point and six point case, we get
+    \[ a = 1(3)\]
+    \[ b = 2(3)\]
+    So $c=3$, because 3 is the common factor, and $n$ and $m$ are chosen to make the equation work out, there's nothing particularly special about them.
+</p>
+<p>
+    If $a$ and $b$ share this factor, then we get locked onto a rail.
+    We can only slide up and down by multiples of $c$.
+    However, if $c$ is 1, then the rail that we're stuck on is actually just all of the integers, which is very convenient.
+</p>
+<p>
+    In other words, if $a$ and $b$ do not share a factor, then our answer can be any number, because any number is a multiple of 1.
+    By "do not share a factor", I really mean that they share only 1, because 1 is a factor of everything.
+    Because $a$ and $b$ share only 1 as a factor, we say that $a$ and $b$ are coprime.
+    Similar to a prime number being prime because its only factors are 1 and itself,
+    coprime numbers are coprime because between the factors of those numbers there is nothing in common.
+</p>
+<p>
+    Having gone through all that, it reveals a few elements of Diophantine equations:
+    <ul>
+        <li>They may not have solutions for all inputs/outputs</li>
+        <li>They will have a solution if the coefficients are coprime (with some trivial exceptions)</li>
+        <li>They will have a solution if the GCF of the coefficients is a factor of the output (i.e. $D$ is a multiple of $\text{GCF}(a, b)$)</li>
+    </ul>
+    We know all of this is true because the coefficients sharing a factor means that your output will be confined to being a multiple of that common factor,
+    like an inescapable doll from a horror movie or something.
+    And this factor is horror-like because you can factor it out of the whole equation, 
+    so your result will be that common factor times some integer made up of some number of $a$s plus some number of $b$s,
+    which must be a multiple of that common factor.
+</p>
+<p>
+    Knowing whether there is a solution or not can save you some work, or answer some questions about basketball,
+    but actually calculating solutions to Diophantine Equations can be a little less than straightforward.
+    With real numbers, we have the luxury of being able to divide any number we want by any other number, 
+    and not really caring about what happens.
+    In Diophantine land, though, decimal points are illegal and unhelpful.
+</p>

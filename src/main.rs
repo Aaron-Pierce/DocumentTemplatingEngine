@@ -7,16 +7,19 @@
 )]
 
 // use actix_files as fs;
-use fs_extra::{self, dir::CopyOptions};
 use actix_web::{App, HttpServer};
+use fs_extra::{self, dir::CopyOptions};
+use notify::{Watcher, RecursiveMode, watcher};
+use std::sync::mpsc::channel;
+use std::time::Duration;
 mod compiler;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use compiler::Compiler;
-    
-    let compiler = Compiler{
-        article_directory: "./src/articles/",
+
+    let compiler = Compiler {
+        article_directory: "src/articles/",
         template_directory: "./src/templates/",
     };
 
@@ -40,14 +43,14 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
-
     let copy_options = CopyOptions {
         overwrite: true,
         skip_exist: false,
         content_only: true,
         ..CopyOptions::new()
     };
-    fs_extra::dir::copy("./src/public", "./built", &copy_options).expect("Could not copy contents of ./src/public");
+    fs_extra::dir::copy("./src/public", "./built", &copy_options)
+        .expect("Could not copy contents of ./src/public");
 
     let result = HttpServer::new(|| {
         App::new()
@@ -56,10 +59,43 @@ async fn main() -> std::io::Result<()> {
     })
     .bind("192.168.1.244:8080")?
     .bind("127.0.0.1:8080")?
-    .run()
-    .await;
+    .run();
 
-    println!("After server");
+    // Create a channel to receive the events.
+    let (tx, rx) = channel();
 
-    return result;
+    // Create a watcher object, delivering debounced events.
+    // The notification back-end is selected based on the platform.
+    let mut watcher = watcher(tx, Duration::from_secs(2)).unwrap();
+
+    // Add a path to be watched. All files and directories at that path and
+    // below will be monitored for changes.
+    watcher
+        .watch("src/articles/", RecursiveMode::Recursive)
+        .unwrap();
+
+    loop {
+        match rx.recv() {
+            Ok(event) => {
+                match event {
+                    notify::DebouncedEvent::NoticeWrite(pathbuf) => {
+                        let article_name = pathbuf.file_name().unwrap().to_str().unwrap();
+                        let article_name = String::from(article_name);
+                        let article_name = article_name.strip_suffix(".html");
+                        match article_name {
+                            Some(name) => {
+                                println!("Detected change for {:?}, compiling", name);
+                                compiler.compile(&String::from(name));
+                            },
+                            None => eprintln!("Changed article did not end in .html")
+                        }
+                    },
+                    _ => {}
+                }
+            },
+            Err(e) => println!("watch error: {:?}", e),
+        }
+    }
+
+    return result.await;
 }
