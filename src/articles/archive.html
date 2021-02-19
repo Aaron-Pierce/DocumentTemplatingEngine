@@ -1,17 +1,33 @@
 *articleSkeleton
 
 <style>
-    .archiveEntry a{
-        color: black!important;
+    .link{
+        color: black !important;
+        text-decoration: none;
+        padding-left: 0.5em;
+    }
+
+    .link:visited {
+        color: black !important;
         text-decoration: none;
     }
 
-    .archiveEntry a:visited{
-        color: black!important;
-        text-decoration: none;
+    #archive{
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 0.5em;
     }
 
-    .underline{
+    #archive *:nth-child(2n){
+        border-left: 0px solid black;
+    }
+
+    .date {
+        text-align: right;
+        /* max-width: 10px; */
+    }
+
+    .underline {
         text-decoration: underline;
     }
 </style>
@@ -19,5 +35,10 @@
 <!-- Insert new archive entries here. They will appear in exactly the order listed -->
 <!-- So put the most recent entry on top. -->
 
-!{archiveEntry}[Diophantine Equations][./diophantine.html][01/19/2021]
-!{archiveEntry}[$ touch VI][./][01/04/2021]
+<div id="archive">
+    !{archiveEntry}[Karnaugh Maps][./karnaughmaps][02/11/2021]
+    !{archiveEntry}[Diophantine Equations][./diophantine][01/19/2021]
+    !{archiveEntry}[Notes on Calculus III][./calculusnotes][Fall 2020]
+    <!-- !{archiveEntry}[$ touch VI][./][01/04/2021] -->
+
+</div>

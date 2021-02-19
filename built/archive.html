@@ -29,17 +29,33 @@
             
 
 <style>
-    .archiveEntry a{
-        color: black!important;
+    .link{
+        color: black !important;
+        text-decoration: none;
+        padding-left: 0.5em;
+    }
+
+    .link:visited {
+        color: black !important;
         text-decoration: none;
     }
 
-    .archiveEntry a:visited{
-        color: black!important;
-        text-decoration: none;
+    #archive{
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 0.5em;
     }
 
-    .underline{
+    #archive *:nth-child(2n){
+        border-left: 0px solid black;
+    }
+
+    .date {
+        text-align: right;
+        /* max-width: 10px; */
+    }
+
+    .underline {
         text-decoration: underline;
     }
 </style>
@@ -47,15 +63,16 @@
 <!-- Insert new archive entries here. They will appear in exactly the order listed -->
 <!-- So put the most recent entry on top. -->
 
-<div class="archiveEntry">
-    <p>
-        <a href="./diophantine.html">01/19/2021 - <span class="underline">Diophantine Equations</span></a>
-    </p>
-</div>
-<div class="archiveEntry">
-    <p>
-        <a href="./">01/04/2021 - <span class="underline">$ touch VI</span></a>
-    </p>
+<div id="archive">
+    <span class="date">02/11/2021 </span> 
+<span class="underline"><a href="./karnaughmaps" class="link">Karnaugh Maps</a></span>
+    <span class="date">01/19/2021 </span> 
+<span class="underline"><a href="./diophantine" class="link">Diophantine Equations</a></span>
+    <span class="date">Fall 2020 </span> 
+<span class="underline"><a href="./calculusnotes" class="link">Notes on Calculus III</a></span>
+    <!-- <span class="date">01/04/2021 </span> 
+<span class="underline"><a href="./" class="link">$ touch VI</a></span> -->
+
 </div>
         </div>
     </div>
