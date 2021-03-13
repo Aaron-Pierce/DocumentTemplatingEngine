@@ -78,8 +78,8 @@
 </p>
 
 <p>
-    The basic problem they solve is that given a truth table, can you find a boolean function that has the same output
-    for each input as the table.
+    Their purpose is to solve the following problem: given a truth table, can you find a boolean function with the same inputs and outputs as the table?
+    And furthermore, can you find the simplest possible function to do that?
 </p>
 
 <p>
@@ -148,62 +148,63 @@
 </p>
 <p>
     The first observation to make is that a boolean function can only output a 0 or a 1.
-    One way to write a function is to explicitly list what combinations of A, B, and C, will result in a 1.
-    For example, if you give me (0, 0, 0) for inputs to the table above, we can see from the first row that the output
-    is a 1.
+    One way to express any boolean function, then, is to explicitly list what combinations of its inputs will result in a 1.
+    In our case, A, B, and C are those inputs, so we can just list what A, B, and C values we want to output a 1.
 </p>
 <p>
+    For example, if you give me (0, 0, 0) for inputs to the table above, we can see from the first row that the output
+    is a 1.
+    (0, 1, 1) and (1, 0, 0) are the other inputs that result in a 1 as well, as seen in the fourth and fifth rows of the truth table.
     So one way to write this function out is to say: "If you give me (0, 0, 0) or (0, 1, 1) or (1, 0, 0), then the
     function is true."
 </p>
 
 <p>
-    Now our job is to convert those words into a boolean function, and it's surprisingly easy.
-    In fact, we've basically wrote it down already.
-    If we just convert the "or"s to logical symbols, we get $(0,0,0) + (0, 1, 1) + (1, 0, 0)$.
-    (I am denoting $+$ as the OR operator. You may have seen it as $\lor$, but this is what my textbook and professor
-    use, so it's easier to not fight it.)
-    (Similarly, I will denote AND by multiplication, instead of $\land$)
+    Now our job is to convert those words into a boolean function.
+    How can we write a function that knows if you gave it (0, 0, 0) or (0, 1, 1) or (1, 0, 0)?
+    As humans we can just look at whatever input we're given and see if it matches, but circuits don't have eyes (and we care about Karnaugh maps for building circuits),
+    so we need to be able to write out a mathematical expression to do this.
 </p>
 <p>
-    But this is still nonsense, because we have no notion of how to take the OR of this tuple.
-    In other words, we need to convert my offhand notation for these inputs into some real notation.
-    The first thing that we can see is that, because we have three things OR'd together, we need to convert these tuple
-    things to some kind of boolean statement.
+    (I use the following notation for the algebra, we'll need it in a second: AB means <span class="code">A AND B</span>, A'B means <span class="code">NOT A AND B</span>, and A + C' means <span class="code">A OR NOT C</span>)
 </p>
 <p>
-    Thankfully, this one is pretty straightforward too.
-    We have three sets of inputs: (0, 0, 0), (0, 1, 1), (1, 0, 0).
-    If you give me an input, how can I tell that it's one of those special ones?
-    (Answering that question is equivalent to finding the function).
+    Let's start with just one of those inputs.
+    What is a function that evaluates to true if and only if it was passed in, say, (1, 0, 0)?
+    If we were to write that in a programming language, we could express this as <span class="code"> A == 1 && B == 0 && C == 0</span>
+    We can be a little more concise if we express it as a boolean algebra statement.
+    <span class="code">A == 1</span> is equivalent to just saying <span class="code">A</span>.
+    If A is equal to 1 the expression evaluates to 1, and if A is 0 the expression evaluates to 0.
+    Similarly, <span class="code">B == 0</span> is the same as writing <span class="code">B'</span>, for the opposite reason.
+    If B is 1 it evalutes to 0, and if B is 0 it evaluates to 1.
+</p>
+
+<p>
+    So to express the function that evaluates to true if and only if it was passed (1, 0, 0),
+    we need only write <span class="code">AB'C'</span>.
+    This expression can only possibly be true for the inputs (1, 0, 0).
 </p>
 <p>
-    Well let's just take one of those.
-    If you give me (0, 0, 0), how can I know you gave me (0, 0, 0)?
-    Well the expression A'B'C' can only possibly be true for (0, 0, 0).
-    If any of the inputs A, B, or C were equal to 1 then it would be equivalent to 1 AND 1 AND 0, which definitely
-    doesn't evaluate to true.
+    Expressions like these are called minterms.
+    A minterm is just the jargony name for the concept we were just thinking about: an expression that evaluates to true for exactly one input.
 </p>
 <p>
-    (But why can't we just look at it? Obviously (0, 0, 0) is equal to (0, 0, 0). The answer is that circuits can't
-    really look at things,
-    and circuits are really why we care about any of this)
+    If we string a bunch of minterms together, joined by ORs, we can create the very function we wanted earlier.
+    Because each minterm evaluates to true for exactly one input, ORing together multiple minterms allows us to create functions that evaluate to true if the input
+    matches any of the minterms that make up the function.
 </p>
 <p>
-    Then if we do that same process for each special input, and OR them together, we get an expression that says: "is
-    the
-    input you gave me equal to special input 1, or special input 2, or special input 3?"
-    If so, return true.
-</p>
-<p>
-    We can write that exact expression as: A'B'C' + A'BC + AB'C'.
-    So if the input matches any of the special inputs, it will be converted to 1 AND 1 AND 1, and OR'd together with two
-    0 values, so it will evaluate to true.
+    For example, if we take the minterms for each of the 3 inputs we were thinking about earlier, we get <span class="code">A'B'C' + A'BC + AB'C'</span>.
+    So if the input satisfies any of the 3 minterm expressions, the whole function will result in a 1.
 </p>
 <p>
     And that is a perfectly comprehensive way to write out that table as a function.
-    The function is then said to be in it's <a href="https://en.wikipedia.org/wiki/Canonical_normal_form">canonical
-        disjunctive normal form</a>, if the jargon interests you at all.
+    The function can only output 1s or 0s.
+    If we just list all of the ways it should output a 1, then we're done.
+    All other inputs will be a 0, and we get the correct function.
+    Once we've done that listing out,
+    the function is then said to be in its <a href="https://en.wikipedia.org/wiki/Canonical_normal_form">canonical
+        disjunctive normal form</a>.
 </p>
 <p>
     I think the idea of writing functions out in that way is spectacularly clever.
@@ -234,13 +235,13 @@
 <p>
     That's all super neat.
     The final level on top of that is that listing every single input that maps to a 1 can get pretty tedious, and if
-    you are building a circuit out of that function, you could be using a ton of gates to compute all of those
-    expressions
-    that evaluate to true for a single, unique value.
+    you are building a circuit to match that function, you could be using a ton of gates to compute all of those
+    minterm expressions.
 </p>
 <p>
     It's possible that following that method could produce a circuit, or function, that is unnecessarily large.
     For example, let's look at another table.
+    When we create the function to match this table we will see that it is needlessly complex.
 </p>
 
 <table>
@@ -300,18 +301,21 @@
     </tr>
 </table>
 <p>
-    If we do the "enumerate all inputs that should output 1" method, the function becomes
-    A'B'C + A'BC + AB'C + ABC.
+    After we do the "enumerate all inputs that should output 1" method, we get the following function:
+    <span class="code">A'B'C + A'BC + AB'C + ABC</span>.
 </p>
 <p>
-    You can factor out the C to get C(A'B' + A'B + AB' + AB).
-    That parenthetical expression will always be true, because it has every single possible negation.
-    C AND True evaluates to C, so we could have reduced the function to just C.
+    You can factor out the C in that expression to get <span class="code">C(A'B' + A'B + AB' + AB)</span>.
+    That parenthetical expression will always be true.
+    One way to justify that is to observe that no matter what A or B are, one of those terms in the parenthesis will be a 1, and because all the terms are OR'd together,
+    the whole parenthetical expression will evaluate to true.
+    <span class="code">C AND True</span> evaluates to <span class="code">C</span>, so we could have just written that instead.
     No long list of terms required.
+    However, to figure that out, we needed to write out all the minterms and do some algebra to manipulate the function before spotting that it can be reduced.
     A Karnaugh map will help us automate the process we just did.
     Instead of doing the two step process of making that normal form function and then algebraically reducing the
     function down,
-    we can use a karnaugh map to skip straight to a reduced function.
+    we can use a Karnaugh map to skip straight to a reduced function.
 </p>
 
 <p>
@@ -320,7 +324,7 @@
 
 <p>
     We start by making a table with the same number of cells as rows in the truth table.
-    Eventually, each row from the truth table its own cell in the Karnaugh map.
+    Eventually, each row from the truth table will get its own cell in the Karnaugh map.
 </p>
 <table class="">
     <tr>
@@ -351,7 +355,7 @@
     rectangle that is as close to a square as possible)
 </p>
 <p>
-    After that, you designate the axes of the table, and label each row and column.
+    After that, you designate the axes of the table, and label each row and column in a very specific way (we'll get to why later).
 </p>
 <table class="ghost">
     <tr class="ghost">
@@ -402,24 +406,28 @@
     </tr>
 </table>
 <p>
-    This means that the labels across the top are inputs of A and B, and the inputs along the side are for C.
-    Why do you combine A and B?
-    It's kind an arbitrary choice to pick A and B, we could have picked any two, but we need to combine some variables
+    The letter labels across the top mean that the columns represent the inputs A and B, and the inputs along the side are for C.
+</p>
+<p>
+    Why do you combine A and B together?
+    It's an arbitrary choice to pick A and B.
+    We could have picked any two inputs, but we do need to combine some variables
     together.
     If we gave each variable its own axis, we would need a 3D map, and if we had 6 variables, we would need a six
     dimensional map!
 </p>
 <p>
-    Now we populate the map with values from the truth table and designate the axes of the table, labeling each row and
-    column.
+    Now we populate the map with values from the truth table.
     Each cell corresponds to a row from the truth table, so the top left corresponds to the row with inputs (0, 0, 0),
     and the one to the right of it is from inputs (0, 1, 0), and so on.
+    You figure this out by looking at the numeric labels along the columns and rows.
+    The top left is in the AB = 00 column, and the C = 0 row, thus your inputs are (0, 0, 0), which lives in the first row of the table.
 </p>
 <p>
     The value in each cell is what is outputted from the truth table when you put in the corresponding input from the
     map.
     So the top right has A = 1, B = 0, and C = 0.
-    The truth table with the row that has those values of A, B, and C, outputs a 0, so we write a 0 in that cell.
+    The truth table with the row that has those input values outputs a 0, so we write a 0 in that cell.
 </p>
 <table class="ghost">
     <tr class="ghost">
@@ -470,7 +478,8 @@
     </tr>
 </table>
 <p>
-    Instantly we see that the output of this function is 1 whenever C is 1.
+    We can now instantly see that the output of this function is 1 whenever C is 1.
+    Just looking at this map could have let us figure out that we could express that function before by just writing <span class="code">C</span>.
     However, that was a simple example, let's invent a totally different function so we can do some real work with
     Karnaugh maps.
 </p>
@@ -525,67 +534,64 @@
 </table>
 
 <p>
-    If this is our table, we need to figure out the magic function that created it.
-    To repeat, this table means that the output of a function given A, B, and C, is written in the corresponding cell.
-    For example, the top right cell is in the column labeled 10, so A = 1 and B = 0 for that whole column.
-    The top right cell is in row C = 0, so the top right cell's corresponding input is (1, 0, 0).
-    Because there is a 1 in that cell, our mystery function f(A, B, C) must output 1 for F(1, 0, 0).
+    If this is our map, created from some random truth table, we need to figure out the corresponding function.
 </p>
 
 <p>
-    We're going to use the same strategy as before to create an expression for this function.
-    We look at the map and see where the 1s are, and we are going to write an expression that tells you whether your
-    input will output a 1.
-    We're using this map because we can glean some useful information about how to most effectively express that.
+    To start, we're going to use the minterm strategy to create an expression for this function.
+    We look at the map and see what cells have 1s, thus the function should output a 1 for the corresponding input,
+    so we create a minterm for that input.
+    However, by using this map because we can glean some useful information about how to simplify some of the minterms.
 </p>
 <p>
-    When two 1s are adjacent to each other (not diagonally), it means that there is something in common between them.
-    For example, look at the fourth column (the one labeled 10).
+    When two cells are adjacent to each other in the map (not diagonally), it means that there is something in common between them.
+    (This is a result of the specific way we labeled the rows and columns).
+    To see this, look at the fourth column (the one labeled 10).
     There are 2 adjacent 1s in that column.
     This tells us that when A = 1 and B = 0, the value of C actually doesn't matter, because whether C is 0 or 1, so
     long as A = 1 and B = 0, the value is true.
-    So one of those uniquely true expressions we were thinking about ealier will be AB', because 1 AND 0' is the same as
-    1 AND 1, which is true.
+    So we can create a minterm of sorts, <span class="code">AB'</span>, which will evaluate to true if A=1 and B=0, and doesn't care about what C is.
+    This is the same as writing <span class="code">AB'C + AB'C'</span>, which is what we would have gotten by writing out explicit minterms.
+    Later on we would have algebraically reduced that expression into <span class="code">AB'</span>.
+    By using a Karnaugh map, we can find places where ORing together those minterms can be reduced,
+    and automatically do it without much work.
+    It very conveniently allows us to skip steps.
 </p>
 <p>
-    We would have written that very same information before as AB'C' + AB'C, which algebraically reduces to AB' anyway,
-    so we've conveniently skipped a step.
-</p>
-
-<p>
-    As we find these groups of adjacent 1s, we can OR them together just as before to get an expression for the
-    function.
+    As we find these groups of adjacent 1s, we can create more simplified expressions and OR them together to get an expression for the
+    function that is already reduced for us.
 </p>
 <p>
-    The other pair of adjacent 1s is in the first row.
-    We see that C is constant between them, and A is constant, but B changing doesn't do anything.
+    There's another pair of adjacent 1s is in the first row of the map we just worked with.
+    We see that A and C are constant, and changing B doesn't affect the output.
     So when C = 0 and A = 0, no matter what B is, the output will be 1.
-    So the expression from those two 1s is A'C'.
+    So the reduced minterm expression that evalutes to true for those two 1s is A'C'.
+    No B term required.
 </p>
 <p>
-    So when we OR those together, we get AB' + A'C', which is a nicely reduced function.
+    So when we OR that together with the other simpilifed expression we get <span class="code">AB'&nbsp;+&nbsp;A'C'</span>, which is not only a function that matches the map, but is also the most reduced form possible.
 </p>
 <p>
     I've skipped a crucial part of the explanation so far.
     How did we label the rows and columns?
 </p>
 <p>
-    The key idea behind Karnaugh maps that let us eyeball these reductions is that two adjacent 1s have a variable they
+    The key idea behind Karnaugh maps that let us eyeball these simplifications is that two adjacent 1s have a variable they
     don't care about.
     For example, if ABC and ABC' are both 1, they will be adjacent in the map, and the value of C doesn't matter, i.e we
     can factor out the AB
-    to get AB AND (C OR C'), which is equivalent to AB.
+    to get <span class="code">AB AND (C OR C')</span>, which is equivalent to <span class="code">AB</span>.
 </p>
 <p>
-    We label the rows and columns by gray code, then, because we want adjacent 1s to be separated by only a single
+    We label the rows and columns by <a href="https://en.wikipedia.org/wiki/Gray_code">gray code</a>, as we want adjacent cells to be separated by only a single
     changed variable.
-    Doing this allows us to find variables we don't care about,
+    Doing this allows us to find variables we don't care about.
     Gray code is specifically designed so that consecutive gray code values are separated by only 1 bit.
     So we begin the labeling with <b>00</b>, and then add 1 to get <b>01</b>, then we go to <b>11</b>, which changes
     only the leftmost bit, and then we go to <b>10</b>.
     Each of those changes is only a single bit.
     That way, adjacent values in the map mean that the inputs are identical for all but one variable.
-    That way, when 1s are next to each other, we know that they don't depend on that one variable we don't care about,
+    That way, when 1s are next to each other, we know that they don't depend on that one variable that changes,
     and we can eliminate it from the expression.
 </p>
 <p>
@@ -679,10 +685,10 @@
     </li>
     <li>
         Write an expression that is true for any member of that group by omitting the variables you don't care about,
-        and forcing the constant inputs to be 1s
+        and forcing the constant inputs to be 1s. Much like creating a minterm.
     </li>
     <li>
-        OR together all of the expressions, and you have a reduced function
+        OR together all of the expressions you've created, and you have a neatly reduced function
     </li>
 </ul>
 </p>
@@ -766,7 +772,7 @@
 
 <p>
     We start by creating our Karnaugh map.
-    There are 8 rows in the table, so we will create a 2x4 map, with AB as the columns and C as the rows.
+    There are 8 rows in the table, so we will create a 2x4 map (it's the closest we can get to a square), with AB as the column inputs and C as the row input.
 </p>
 
 
@@ -819,7 +825,7 @@
     </tr>
 </table>
 <p>
-    After this, we find groups of adjacent 1s in powers of 2.
+    After this, we find groups of adjacent 1s with group size equal to a power of 2.
 </p>
 
 <table class="ghost">
@@ -875,7 +881,7 @@
     Notice that we have to use two groups.
     If we included all 4 1s into a single group, we would change more than a single variable per group.
     If they were all in a line this would be fine,
-    because the group size is a power of 2 and all cells are adjacent, but because they are not all adjacent
+    because 4 is a power of 2 and all cells are adjacent, but because they are not all on the same line,
     we change too much information within the group to get anything useful out of it.
 </p>
 

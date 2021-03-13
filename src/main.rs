@@ -15,14 +15,11 @@ mod compiler;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use compiler;
 
-    let compiler: compiler::Compiler = compiler::Compiler {
-        article_directory: "src/articles/",
-        template_directory: "./src/templates/",
-    };
+    let compiler: compiler::Compiler = compiler::Compiler::new("src/articles/", "./src/templates/");
 
     let mut args = std::env::args();
+    // skip the executable name argument
     args.next();
 
     compiler.interpret_arguments(&mut args);
@@ -43,16 +40,17 @@ async fn main() -> std::io::Result<()> {
     // The notification back-end is selected based on the platform.
     let mut watcher = watcher(tx, Duration::from_secs(2)).unwrap();
 
-    // Add a path to be watched. All files and directories at that path and
-    // below will be monitored for changes.
+    // Adds the article_directory path to be watched
     watcher
-        .watch(compiler.article_directory, RecursiveMode::Recursive)
+        .watch(compiler.get_article_directory(), RecursiveMode::Recursive)
         .unwrap();
 
+    //wait for files to change in the article directory
     loop {
         match rx.recv() {
             Ok(event) => match event {
                 notify::DebouncedEvent::NoticeWrite(pathbuf) => {
+                    //format it so that the compiler will take it
                     let article_name = pathbuf.file_name().unwrap().to_str().unwrap();
                     let article_name = String::from(article_name);
                     let article_name = article_name.strip_suffix(".html");
