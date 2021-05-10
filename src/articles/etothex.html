@@ -1,0 +1,333 @@
+*articleSkeleton
+!{makeTitle}[Understanding exp(x) easily][May 10, 2021]
+${mathjaxInit}
+<p>
+    $e^x$ is a bit of a strange function.
+    It comes up so often in a wide variety of mathematical contexts, yet its origin is so mysterious.
+    Where does it come from? Why is it so useful?
+    I have enjoyed partially discovering the answer to these question while working through my differential equations
+    course.
+</p>
+<p>
+    The discovery of $e^x$ could begin with the following question,
+    which you could reasonably pose just after learning about derivatives.
+    "If taking the derivative of a function results in a new function, whose value at each point is the slope of the
+    original function at that point, is there any function whose derivative is equal to itself?
+</p>
+<p>
+    And if you had gone about answering that question just after learning about derivatives, you may start your
+    discovery looking for a polynomial whose derivative is itself,
+    because you are probably only taking derivatives of polynomials if you've just learned about it.
+</p>
+<p>
+    So let's consider what kind of polynomial would be its own derivative.
+    A polynomial is in the form of $a + bx + cx^2 + dx^3 + ex^4 \ldots$
+    To create a polynomial, we just decide what value each of those coefficients takes.
+    So let's do that then.
+</p>
+<p>
+    If that polynomial's derivative is equal to itself, we can just take the derivative of the polynomial and set it
+    equal to the original polynomial.
+</p>
+<p>
+    $a + bx + cx^2 + dx^3 + ex^4 + \ldots = b + 2cx + 3dx^2 + 4ex^3 + \ldots$
+</p>
+<p>
+    And with that first step, we've solved some of the mystery.
+    It must be true that $a = b$, because those are the only terms with no $x$ in them.
+</p>
+<p>
+    So we've solved the first two terms. Let's remove those constants so we can focus on what we don't know:
+    $bx + cx^2 + dx^3 + ex^4 + \ldots = 2cx + 3dx^2 + 4ex^3$
+</p>
+<p>
+    Reading off of this, we know that $b = 2c$ and that $c = 3d$ and $d = 4e$.
+    However, this doesn't help us at all.
+    Sure, we know that $b = 2c$, but $c$ is equal to another variable who is equal to another variable who is equal...
+    We aren't any more equipped to solve this problem.
+    What do we do?
+</p>
+
+<p>
+    Well from before, we figured out that $a=b$, and that $a=1$.
+    So $2c$ must equal $1$, so $c = \frac{1}{2}$
+</p>
+<p>
+    And if $c = \frac{1}{2}$, we know that $c = 3d$, so $\frac{1}{2} = 3d$. Which means $d = \frac{1}{6}$
+</p>
+<p>
+    And a pattern emerges.
+    $a=1$, $b=1$, $c=\frac{1}{2}$, $d = \frac{1}{6}$.
+    Let's find $e$ to verify the pattern.
+    from earlier, $d = 4e$, so $e = \frac{1}{24}$.
+    Our pattern is that each letter is 1 over $k!$ where $k$ is its position in the alphabet. So a is 0, b is 1, c is 2,
+    and so on.
+</p>
+
+<p>
+    So the function that we have discovered/built is:
+    $1 + x + \frac{x^2}{2} + \frac{x^3}{6} + \frac{x^4}{24} + \ldots$
+</p>
+
+<p>
+    And we arrived at this because we started with a generic polynomial $a + bx + cx^2 + dx^3 + ex^4 + \ldots$
+    And asked what the coefficients had to be if the function's derivative would be equal to itself.
+    We decided that each coefficient was equal to $\frac{1}{k!}$.
+</p>
+<p>
+    And this makes sense.
+    When you take the derivative of a polynomial, any term will be multiplied by its exponent, and its power will
+    decrease by 1.
+    So when you take a derivative of this function, each term will become the one to its left.
+    In effect, your function is shifting down to the left.
+    The $1$ becomes a $0$ and disappears. The $x$ becomes a 1 and takes its place.
+    The $\frac{x^2}{2}$ becomes x and takes the place of $x$ which just became a $1$ and so on.
+    And because this polynomial goes on forever, we alwas have a term that can slide to the left when you take a
+    derivative.
+</p>
+<p>
+    Out of curiousity, let's graph this magic function.
+    What could this possibly look like?
+</p>
+
+<canvas id="initialGraph" style="width: 100%;" width="1000" height="1000"></canvas>
+<script>
+    //draw initial graph
+    const canvas = document.getElementById("initialGraph");
+    if (canvas instanceof HTMLCanvasElement) {
+        canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvas.getContext('2d');
+        const drawWidth = canvas.width * 0.75;
+        const horizBuffer = canvas.width * 0.25 / 2;
+        const drawHeight = canvas.height * 0.75;
+        const vertBuffer = canvas.height * 0.25 / 2;
+
+        const xBounds = [0, 10];
+        const yBounds = [0, 10];
+
+        let xRange = xBounds[1] - xBounds[0];
+        let yRange = yBounds[1] - yBounds[0];
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        for (let i = 0; i <= xRange; i++) {
+            ctx.beginPath();
+            let xVal = horizBuffer + ((i / xRange) * drawWidth);
+            ctx.moveTo(xVal, vertBuffer);
+            ctx.lineTo(xVal, vertBuffer + drawWidth);
+            ctx.stroke();
+            for (let j = 0; j <= yRange; j++) {
+                ctx.beginPath();
+                let yVal = vertBuffer + ((j / yRange) * drawHeight);
+                ctx.moveTo(horizBuffer, yVal);
+                ctx.lineTo(horizBuffer + drawHeight, yVal);
+                ctx.stroke();
+            }
+        }
+
+        //draw axis lines
+
+        //Y axis line
+        ctx.beginPath();
+        let zeroX = horizBuffer;
+        ctx.lineWidth = 8;
+        ctx.moveTo(zeroX, vertBuffer);
+        ctx.lineTo(zeroX, vertBuffer + drawHeight);
+        ctx.stroke();
+
+        //X axis line
+        ctx.beginPath();
+        let middleY = vertBuffer + (8 / xRange * drawHeight);
+        ctx.lineWidth = 8;
+        ctx.moveTo(horizBuffer, middleY);
+        ctx.lineTo(horizBuffer + drawWidth, middleY);
+        ctx.stroke();
+
+        //draw axis labels
+        ctx.font = "bold 40px serif"
+        ctx.fillText("y", horizBuffer - 7, vertBuffer - 15)
+        ctx.fillText("x", horizBuffer + drawWidth + 7, middleY + 7)
+
+        let f = (x) => 1 + x + (1 / 2) * x ** 2 + (1 / 6) * x ** 3 + (1 / 24) * x ** 4 + 1 / (120) * x ** 5 + 1 / (120 * 6) * x ** 6 + 1 / (120 * 6 * 7) * x ** 7 + 1 / (120 * 6 * 7 * 8) * x ** 8 + 1 / (120 * 6 * 7 * 8 * 9) * x ** 9 + + 1 / (120 * 6 * 7 * 8 * 90) * x ** 10;
+
+        ctx.lineWidth = 4;
+        ctx.moveTo(zeroX, middleY);
+        const delta = 0.2
+        for (let i = 0; i < xBounds[1]; i += delta) {
+            let yVal = middleY - (drawHeight / yRange) * f(i);
+            ctx.ellipse(zeroX + drawWidth * (i / xRange), yVal, 0, 0, 0, 0, 2 * 3.14);
+            ctx.stroke();
+        }
+    }
+</script>
+
+
+<p>
+    Funnily, this graph actually looks kind of familiar.
+    It looks pretty close to an exponential function.
+    That's just a guess though, let's test a whole bunch of them and see.
+    In fact, why don't you try?
+</p>
+
+<input type="range" id="base" name="base" name="base" min="1" max="3" step="0.01" value="2.0">
+<label for="base" id="baseLabel">2<sup>x</sup></label>
+<canvas id="solutionGraph" style="width: 100%;" width="1000" height="1000"></canvas>
+<script>
+    //draw initial graph
+    const solutionCanvas = document.getElementById("solutionGraph");
+    console.log("Found solution canvas");
+    update();
+    function update() {
+        let baseLabel = document.getElementById("baseLabel");
+        baseLabel.innerHTML = document.getElementById("base").value + `<sup>x</sup>`
+        if (solutionCanvas instanceof HTMLCanvasElement) {
+            solutionCanvas.style.height = getComputedStyle(solutionCanvas).width;
+            const ctx = solutionCanvas.getContext('2d');
+            ctx.clearRect(0, 0, solutionCanvas.width, solutionCanvas.height);
+            const drawWidth = solutionCanvas.width * 0.75;
+            const horizBuffer = solutionCanvas.width * 0.25 / 2;
+            const drawHeight = solutionCanvas.height * 0.75;
+            const vertBuffer = solutionCanvas.height * 0.25 / 2;
+
+
+            const xBounds = [0, 10];
+            const yBounds = [0, 10];
+
+            let xRange = xBounds[1] - xBounds[0];
+            let yRange = yBounds[1] - yBounds[0];
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            for (let i = 0; i <= xRange; i++) {
+                ctx.beginPath();
+                let xVal = horizBuffer + ((i / xRange) * drawWidth);
+                ctx.moveTo(xVal, vertBuffer);
+                ctx.lineTo(xVal, vertBuffer + drawWidth);
+                ctx.stroke();
+                for (let j = 0; j <= yRange; j++) {
+                    ctx.beginPath();
+                    let yVal = vertBuffer + ((j / yRange) * drawHeight);
+                    ctx.moveTo(horizBuffer, yVal);
+                    ctx.lineTo(horizBuffer + drawHeight, yVal);
+                    ctx.stroke();
+                }
+            }
+
+            //draw user curve
+            let zeroX = horizBuffer;
+            let middleY = vertBuffer + (8 / xRange * drawHeight);
+            let f = (x) => Math.pow(parseFloat(document.getElementById("base").value), x);
+            ctx.lineWidth = 4;
+            ctx.moveTo(zeroX, middleY);
+            const delta = 0.2
+            ctx.strokeStyle = "black";
+            for (let i = 0; i < xBounds[1]; i += delta) {
+                let yVal = middleY - (drawHeight / yRange) * Math.exp(i);
+                ctx.ellipse(zeroX + drawWidth * (i / xRange), yVal, 0, 0, 0, 0, 2 * 3.14);
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            if (document.getElementById("base").value == "2.72") {
+                ctx.strokeStyle = 'green';
+
+            } else {
+                ctx.strokeStyle = 'red';
+            }
+            ctx.moveTo(zeroX, middleY);
+            for (let i = 0; i < xBounds[1]; i += delta) {
+                let yVal = middleY - (drawHeight / yRange) * f(i);
+                ctx.ellipse(zeroX + drawWidth * (i / xRange), yVal, 0, 0, 0, 0, 2 * 3.14);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'black';
+
+            //draw axis lines
+
+            //Y axis line
+            ctx.beginPath();
+            ctx.lineWidth = 8;
+            ctx.moveTo(zeroX, vertBuffer);
+            ctx.lineTo(zeroX, vertBuffer + drawHeight);
+            ctx.stroke();
+
+            //X axis line
+            ctx.beginPath();
+            ctx.lineWidth = 8;
+            ctx.moveTo(horizBuffer, middleY);
+            ctx.lineTo(horizBuffer + drawWidth, middleY);
+            ctx.stroke();
+
+
+
+            //Line to forgive my gross curve drawing hack
+            ctx.beginPath();
+            ctx.lineWidth = 4;
+            ctx.moveTo(horizBuffer, vertBuffer + drawHeight);
+            ctx.lineTo(horizBuffer + drawWidth, vertBuffer + drawHeight);
+            ctx.stroke();
+
+            //draw axis labels
+            ctx.font = "bold 40px serif"
+            ctx.fillText("y", horizBuffer - 7, vertBuffer - 15)
+            ctx.fillText("x", horizBuffer + drawWidth + 7, middleY + 7)
+
+        }
+    }
+
+    document.getElementById("base").addEventListener("input", function () {
+        update();
+    });
+</script>
+
+<p>
+    As you can see, $2.72^x$ just kinda happens to approximate our magic polynomial.
+    This is a kind of unfortunate coincidence.
+    On one hand, we can more easily compute values of this function that we've created, but it also removes all the context.
+    We've sacrificed brevity for context.
+</p>
+<p>
+    We can help give a little context by giving this value, 2.72, a name.
+    Let's call it $e$, because it created our magical $e$xponential function. 
+</p>
+<p>
+    So hopefully the dots are more connected now.
+    The number $e$ is actually an approximation of the polynomial we built whose derivative is equal to itself.
+    We care about e because that property is special and useful.
+</p>
+<p>
+    In fact, the guy that asked this question and found this value in the first place actually discovered it because it was needed to solve a problem.
+</p>
+<p>
+    Whenver you see $e$ pop up, it's frequently in a textbook babbling on about compound interest.
+    And at first I always thought this was just the boring, fake justification to motivate the reader to learn about $e$, but as it happens,
+    the guy that discovered this number was thinking about compound interest, which is what led to his discovery.
+</p>
+<p>
+    The idea behind compound interest is that if you invest \$100, and that investment gains 2% value every year, you get that extra 2% on all of your past earnings, too.
+    So the first month you get \$2, because that's 2% of 100, but the second month you get $2.04, which is 2% of your hundred dollars <b>plus 2% of your \$2 from last month.</b>
+</p>
+<p>
+    So you may reasonably ask, how much money will I make this year?
+    It's not as simple as saying that I gain \$2 per month, because you add that money back into your account, which you earn that 2% on as well.
+    So the rate at which you gain money is dependent on the value in your account.
+    In other words, $f'(x) = 0.02f(x)$.
+</p>
+<p>
+    And in order to figure out how much money you have, we need to find a function whose derivative is equal to itself (times 0.02).
+    Well we just did all of that work, and that function is the long polynomial that happens to be approximated by $e^x$.
+    So the amount of money you have is $100e^{0.02x}$
+</p>
+<p>
+    This property is (kind of) the foundation for differential equations.
+    The whole purpose of that field is to solve functions that are defined by their derivative.
+    Just like earlier, $f'(x) = 0.02f(x)$, because you got 2% of your bank account back each month.
+    There are many other times in physics (temperature, water pressure, newtonian mechanics) where it can be easier to define how a system is changing, instead of knowing the total values of everything.
+</p>
+<p>
+    And the reason that $e^x$ comes up in those situations is because the derivative of $e^x$ is $e^x$.
+    Including an $e^x$ somewhere is the only way you can solve a problem where $f(x)$ should be equal to its derivative in any capacity.
+    (Except for sin and cos, which are also secretly exponentials. This is a story for either another time, or a 3blue1brown video)
+</p>
+<p>
+    And that's a pretty big takeaway from differential equations, that the solutions to differential equations can only be functions that have something to do with $e^x$.
+    That fact comes up pretty readily, you don't need to understand where e^x comes from, but it's always nice to know why that is.
+    You need a function whose derivative is itself, you can invent a polynomial who has that property, and for ease of use you can approximate it by an exponential, which you can name $e^x$
+</p>
