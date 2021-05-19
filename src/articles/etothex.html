@@ -334,7 +334,53 @@ ${mathjaxInit}
     (times 0.02).
     Well we just did all of that work, and that function is the long polynomial that happens to be approximated by
     $e^x$.
-    So the amount of money you have is $100e^{0.02x}$
+</p>
+<p>
+    But wait, the derivative of $e^x$ is $e^x$, not $0.02e^x$. We wanted a function whose derivative is equal to itself
+    times 0.02.
+    If we exploit some properties of exponents, we know that $e^{0.02x}$ satisfies this, but what does that have to do with our polynomial?
+</p>
+<p>
+    Let's try to invent another polynomial again.
+    This time, we want $f(x) = 0.02f'(x)$.
+    So let's set up the equation again:
+</p>
+<p>
+    $a + bx + cx^2 + dx^3 + ex^4 + \ldots = 0.02(b + 2cx + 3dx^2 + 4ex^3 + \ldots)$
+</p>
+<p>
+    And our system is:
+    <div style="text-align: center;">
+        $a = 0.02b$<br>
+        $b = 0.02 \cdot 2c$<br>
+        $c = 0.02 \cdot 3d$<br>
+        $d = 0.02 \cdot 4e$<br>
+    </div>
+    And the solution, arbitrarily setting $a=1$ again:
+    <div style="text-align: center;">
+        $a = 0.02b,\, b = \frac{1}{0.02}$<br>
+        $b = 0.02 \cdot 2c,\, c = \frac{1}{0.02^2 \cdot 2}$<br>
+        $c = 0.02 \cdot 3d,\, d = \frac{1}{0.02^3 \cdot 2 \cdot 3}$<br>
+        $d = 0.02 \cdot 4e,\, c = \frac{1}{0.02^4 \cdot 2 \cdot 3 \cdot 4}$<br>
+    </div>
+    And finally, the new polynomial we have created is:
+    $1 + \frac{x}{0.02} + \frac{x^2}{0.02^2 \cdot 2} + \frac{x^3}{0.02^3 \cdot 2 \cdot 3} + \frac{x^4}{0.02^4 \cdot 2 \cdot 3 \cdot 4} + \ldots$
+</p>
+<p>
+    And because the power of the $0.02$ in the denominator is the same as the power of $x$, we can simplify each term to being
+    $\frac{1}{n!} \left(\frac{x}{0.02}\right)^n$
+</p>
+<p>
+    And if we were to graph this function, we would see that it is approximated by $e^{0.02x}$, which is exactly what we want.
+    The polynomial representation lines up with the exponential approximation perfectly.
+</p>
+<p>
+    While we're playing with this polynomial, we have one more knob to turn.
+    We've been setting $a=1$ the whole time. What gives?
+    Well if we set $a$ to any other number, maybe 2, then every coefficient would gain a two, because all coefficients are equal to $a$ divided by something.
+    So we can scale this polynomial by just fixing a value of $a$ to whatever scaling factor we want.
+    This means that for any choice of $a$, the exponential representation of the polynomial is $ a e^x $.
+    The derivative is still itself, but the function gets scaled by some constant.
 </p>
 <p>
     This property is (kind of) the foundation for differential equations.
@@ -354,7 +400,12 @@ ${mathjaxInit}
     And that's a pretty big takeaway from differential equations, that the solutions to differential equations can only
     be functions that have something to do with $e^x$.
     That fact comes up pretty readily, you don't need to understand where $e^x$ comes from, but it's always nice to know
-    why that is.
-    You need a function whose derivative is itself, you can invent a polynomial who has that property, and for ease of
+    why that is; 
+    you need a function whose derivative is itself, you can invent a polynomial who has that property, and for ease of
     use you can approximate it by an exponential, which you can name $e^x$
 </p>
+
+<!-- Things I don't like about this article -->
+<!-- Why an exponential? What's the deal with that? -->
+<!-- Why couldn't it be anything else? -->
+<!-- Can you do this without leaning on unsatisfying algebra? -->
