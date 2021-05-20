@@ -1,0 +1,145 @@
+*articleSkeleton
+!{makeTitle}[Self Balancing Binary Search Trees][May 20, 2021]
+
+<script>
+    class TreeNode {
+        constructor(value, left = null, right = null) {
+            this.value = value;
+            this.left = left;
+            this.right = right;
+        }
+
+        insert(treeNode) {
+            if (treeNode.value > this.value) {
+                if (this.right === null) this.right = treeNode;
+                else this.right.insert(treeNode)
+            } else {
+                if (this.left === null) this.left = treeNode;
+                else this.left.insert(treeNode)
+            }
+        }
+
+        width() {
+            if (this.left == null && this.right == null) return 1;
+            else {
+                let sum = 0;
+                if (this.left != null) sum += this.left.width();
+                if (this.right != null) sum += this.right.width();
+                return sum;
+            }
+        }
+    }
+
+    function visualize(tree, canvas, ctx) {
+        if (tree instanceof TreeNode && canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D) {
+            const node_radius = 70;
+            const vert_buffer = 5;
+
+            let layerQueue = [tree];
+            let indexInLayer = 0;
+            let layerIndex = 0;
+            let layerSize = 1;
+            let nextLayerSize = 0;
+
+            while (layerQueue.length > 0) {
+                let node = layerQueue.shift();
+                let spacing = canvas.width / (layerSize + 1);
+                let xCoord = spacing * (indexInLayer + 1);
+                let yCoord = (node_radius * (layerIndex + 1)) + vert_buffer + layerIndex * 2 * node_radius;
+                ctx.beginPath();
+                ctx.ellipse(xCoord, yCoord, node_radius, node_radius, 0, 0, 2 * 3.14);
+                ctx.stroke();
+                ctx.font = "70px sans-serif"
+                ctx.fillText(node.value + "", xCoord - 19, yCoord + 23);
+                ctx.stroke();
+                console.log("stroked");
+
+                indexInLayer++;
+
+                let shouldMove = false;
+                if (layerQueue.length == 0 || indexInLayer == layerSize) {
+                    shouldMove = true;
+                }
+                if (node.left != null) {
+                    layerQueue.push(node.left);
+                    nextLayerSize++;
+                }
+                if (node.right != null) {
+                    layerQueue.push(node.right);
+                    nextLayerSize++;
+                }
+                if (shouldMove) {
+                    indexInLayer = 0;
+                    layerSize = nextLayerSize;
+                    nextLayerSize = 0;
+                    layerIndex++;
+                }
+            }
+        } else {
+            throw "Did not pass canvas element and canvasrenderingcontext2d"
+        }
+    }
+</script>
+
+<script>
+    function draw(tree, canvas, ctx, rootX = null, rootY = null) {
+        if(tree == null) return;
+        if (tree instanceof TreeNode && canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D) {
+            const node_radius = 70;
+            const vert_buffer = 5;
+            const explosion_factor = 1.25;
+            if (rootX === null) rootX = canvas.width / 2;
+            if (rootY === null) rootY = node_radius + vert_buffer;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(rootX, rootY, node_radius, node_radius, 0, 0, 2 * 3.14);
+            ctx.stroke();
+            ctx.font = "70px sans-serif"
+            ctx.textBaseline = "middle"
+            ctx.textAlign = "center";
+            ctx.fillText(tree.value + "", rootX, rootY);
+            ctx.stroke();
+            console.log("stroked");
+
+            let leftWidth = 0;
+            let rightWidth = 0;
+            if(tree.left != null) leftWidth += tree.left.width();
+            if(tree.right != null) rightWidth += tree.right.width();
+            let maxWidth = Math.max(leftWidth, rightWidth);
+            draw(tree.left, canvas, ctx, rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer);
+            if(tree.left != null){
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY + node_radius);
+                ctx.lineTo(rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer - node_radius);
+                ctx.stroke();
+            }
+            draw(tree.right, canvas, ctx, rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer);
+            if(tree.right != null){
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY + node_radius);
+                ctx.lineTo(rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer - node_radius);
+                ctx.stroke();
+            }
+        }
+    }
+</script>
+
+<canvas id="headerGraph" style="width: 100%;" width="1000" height="1000"></canvas>
+<script>
+        const canvas = document.getElementById("headerGraph");
+        if (canvas instanceof HTMLCanvasElement) {
+            canvas.style.height = getComputedStyle(canvas).width;
+            const ctx = canvas.getContext('2d');
+            let tree = new TreeNode(1);
+            tree.insert(new TreeNode(0));
+            tree.insert(new TreeNode(2));
+            tree.insert(new TreeNode(1.9));
+            tree.insert(new TreeNode(1.8));
+            tree.insert(new TreeNode(2.1));
+            tree.insert(new TreeNode(0.5))
+            tree.insert(new TreeNode(-1))
+            console.log(tree);
+            console.log(tree.width());
+            draw(tree, canvas, ctx)
+        }
+</script>

@@ -2,7 +2,7 @@ use std::{env::Args, fs::read_to_string, path::Path};
 
 use fs_extra::dir::CopyOptions;
 
-pub struct Compiler{
+pub struct Compiler {
     article_directory: String,
     template_directory: String,
 }
@@ -13,16 +13,16 @@ impl Compiler {
     }
 
     pub fn new(article_directory: &str, template_directory: &str) -> Compiler {
-        Compiler{
+        Compiler {
             //we have to repeat the field name to call .to_string() against them
-            //instead of just writing 
+            //instead of just writing
             //  {
-            //      article_directory, 
+            //      article_directory,
             //      template_directory
             //  }
             // i.e we can't use the Field Init Shorthand.
             article_directory: article_directory.to_string(),
-            template_directory: template_directory.to_string()
+            template_directory: template_directory.to_string(),
         }
     }
 
@@ -57,7 +57,7 @@ impl Compiler {
                     }
                 }
             });
-        
+
         self.copy_static_files();
         println!("Compiled all templates.")
     }
@@ -132,7 +132,6 @@ impl Compiler {
         println!("Published")
     }
 
-
     // This is where you programatically define bangs.
     // I generally use some strange character sequence to identify places where
     // you want to fill in bang content
@@ -166,6 +165,15 @@ impl Compiler {
 
                 template_data =
                     template_data.replace("?d", args.get(2).unwrap_or(&String::from("")));
+                return template_data;
+            }
+            "makeSkeleton" => {
+                let mut template_data = read_to_string(format!(
+                    "{}{}",
+                    self.template_directory, "archiveEntry.html"
+                ))
+                .unwrap();
+
                 return template_data;
             }
             _ => String::new(),
@@ -223,12 +231,12 @@ impl Compiler {
                     parsed.start_index..(parsed.start_index + parsed.total_length),
                     reverse_template_content.unwrap(),
                 );
-                return template_data;
+            } else {
+                template_data.replace_range(
+                    parsed.start_index..(parsed.start_index + parsed.total_length),
+                    &self.build_template(&parsed.name, None)[..],
+                )
             }
-            template_data.replace_range(
-                parsed.start_index..(parsed.start_index + parsed.total_length),
-                &self.build_template(&parsed.name, None)[..],
-            )
         }
 
         match reverse_template {
@@ -239,7 +247,7 @@ impl Compiler {
 
     //specific methods to call the generic build on.
     //articles have no reverse template content,
-    //meaning other templates cannot ask to be wrapped in 
+    //meaning other templates cannot ask to be wrapped in
     //an article, because that seems strange
     fn build_template(
         &self,
@@ -260,7 +268,6 @@ impl Compiler {
             None,
         )
     }
-
 
     // finds an instance of a command somewhere in the data parameter
     // returns a TemplateCommand with the arguments that the command
@@ -329,11 +336,11 @@ impl Compiler {
             }
             // println!("Which is {:?}", argument);
 
-            // this 2 compensates for the two brackets that 
+            // this 2 compensates for the two brackets that
             // surround each argument
             // we have the length of the arguments plus
             // the two bracket characters we omitted
-            argument_size_in_text += 2 + argument.len(); 
+            argument_size_in_text += 2 + argument.len();
             arguments.push(argument);
         }
 
