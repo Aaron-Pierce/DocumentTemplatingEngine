@@ -167,15 +167,6 @@ impl Compiler {
                     template_data.replace("?d", args.get(2).unwrap_or(&String::from("")));
                 return template_data;
             }
-            "makeSkeleton" => {
-                let mut template_data = read_to_string(format!(
-                    "{}{}",
-                    self.template_directory, "archiveEntry.html"
-                ))
-                .unwrap();
-
-                return template_data;
-            }
             _ => String::new(),
         }
     }
