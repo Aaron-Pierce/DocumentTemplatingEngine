@@ -167,6 +167,18 @@ impl Compiler {
                     template_data.replace("?d", args.get(2).unwrap_or(&String::from("")));
                 return template_data;
             }
+            "makeMeta" => {
+                let mut template_data =
+                    read_to_string(format!("{}{}", self.template_directory, "meta.html")).unwrap();
+
+                while (template_data.contains("param:")) {
+                    template_data = template_data
+                        .replace("param:title", args.get(0).unwrap_or(&String::from("")));
+                    template_data =
+                        template_data.replace("param:description", args.get(1).unwrap_or(&String::from("")));
+                }
+                return template_data;
+            }
             _ => String::new(),
         }
     }
@@ -274,8 +286,7 @@ impl Compiler {
     // for example, "${myCommand}[myArgument1]" or "#{myCommand}[myArgument1][myArgument2][myArgument3]"
     // however, arguments are hardcoded and the same between all command_formats
     // therefore you don't include them in command_format.
-    // a few reasonable command formats are: "${*}", "#{*}", "~{*}"
-    // and a few silly ones could be "%(*)", "||*||", "?|*|", or "BEGIN COMMAND * END COMMAND"
+    // a few possible command formats are: "${*}", "#{*}", "~{*}"
     // it is critically important that * is not the last character
     // of a command_format, because it will match all of the rest
     // of the template as a command_name, and then it will look for

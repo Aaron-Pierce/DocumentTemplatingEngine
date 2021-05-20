@@ -1,5 +1,5 @@
-*articleSkeleton
-!{makeTitle}[Self Balancing Binary Search Trees][May 20, 2021]
+${articleOpen}
+!{makeMeta}[Self Balancing Binary Search Trees - apierce.dev][Exploring how a BST can balance itself]
 
 <script>
     class TreeNode {
@@ -28,66 +28,20 @@
                 return sum;
             }
         }
-    }
 
-    function visualize(tree, canvas, ctx) {
-        if (tree instanceof TreeNode && canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D) {
-            const node_radius = 70;
-            const vert_buffer = 5;
-
-            let layerQueue = [tree];
-            let indexInLayer = 0;
-            let layerIndex = 0;
-            let layerSize = 1;
-            let nextLayerSize = 0;
-
-            while (layerQueue.length > 0) {
-                let node = layerQueue.shift();
-                let spacing = canvas.width / (layerSize + 1);
-                let xCoord = spacing * (indexInLayer + 1);
-                let yCoord = (node_radius * (layerIndex + 1)) + vert_buffer + layerIndex * 2 * node_radius;
-                ctx.beginPath();
-                ctx.ellipse(xCoord, yCoord, node_radius, node_radius, 0, 0, 2 * 3.14);
-                ctx.stroke();
-                ctx.font = "70px sans-serif"
-                ctx.fillText(node.value + "", xCoord - 19, yCoord + 23);
-                ctx.stroke();
-                console.log("stroked");
-
-                indexInLayer++;
-
-                let shouldMove = false;
-                if (layerQueue.length == 0 || indexInLayer == layerSize) {
-                    shouldMove = true;
-                }
-                if (node.left != null) {
-                    layerQueue.push(node.left);
-                    nextLayerSize++;
-                }
-                if (node.right != null) {
-                    layerQueue.push(node.right);
-                    nextLayerSize++;
-                }
-                if (shouldMove) {
-                    indexInLayer = 0;
-                    layerSize = nextLayerSize;
-                    nextLayerSize = 0;
-                    layerIndex++;
-                }
-            }
-        } else {
-            throw "Did not pass canvas element and canvasrenderingcontext2d"
+        height(){
+            let childHeight = 0;
+            if(this.left != null) childHeight = this.left.height();
+            if(this.right != null) childHeight = Math.max(childHeight, this.right.height());
+            return 1 + childHeight;
         }
     }
-</script>
-
-<script>
+    const node_radius = 70;
+    const vert_buffer = 5;
+    const explosion_factor = 1.25;
     function draw(tree, canvas, ctx, rootX = null, rootY = null) {
-        if(tree == null) return;
+        if (tree == null) return;
         if (tree instanceof TreeNode && canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D) {
-            const node_radius = 70;
-            const vert_buffer = 5;
-            const explosion_factor = 1.25;
             if (rootX === null) rootX = canvas.width / 2;
             if (rootY === null) rootY = node_radius + vert_buffer;
             ctx.lineWidth = 2.5;
@@ -99,48 +53,626 @@
             ctx.textAlign = "center";
             ctx.fillText(tree.value + "", rootX, rootY);
             ctx.stroke();
-            console.log("stroked");
 
             let leftWidth = 0;
             let rightWidth = 0;
-            if(tree.left != null) leftWidth += tree.left.width();
-            if(tree.right != null) rightWidth += tree.right.width();
+            if (tree.left != null) leftWidth += tree.left.width();
+            if (tree.right != null) rightWidth += tree.right.width();
             let maxWidth = Math.max(leftWidth, rightWidth);
-            draw(tree.left, canvas, ctx, rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer);
-            if(tree.left != null){
+            draw(tree.left, canvas, ctx, rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius * 2 * explosion_factor + vert_buffer);
+            if (tree.left != null) {
                 ctx.beginPath();
-                ctx.moveTo(rootX, rootY + node_radius);
-                ctx.lineTo(rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer - node_radius);
+                ctx.moveTo(rootX - Math.cos(3.14 / 3) * node_radius, rootY + Math.sin(3.14 / 3) * node_radius);
+                ctx.lineTo(rootX - (maxWidth * node_radius * explosion_factor), rootY + node_radius * 2 * explosion_factor + vert_buffer - node_radius);
                 ctx.stroke();
             }
-            draw(tree.right, canvas, ctx, rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer);
-            if(tree.right != null){
+            draw(tree.right, canvas, ctx, rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius * 2 * explosion_factor + vert_buffer);
+            if (tree.right != null) {
                 ctx.beginPath();
-                ctx.moveTo(rootX, rootY + node_radius);
-                ctx.lineTo(rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius*2*explosion_factor + vert_buffer - node_radius);
+                // ctx.moveTo(rootX, rootY + node_radius);
+                ctx.moveTo(rootX + Math.cos(3.14 / 3) * node_radius, rootY + Math.sin(3.14 / 3) * node_radius);
+                ctx.lineTo(rootX + (maxWidth * node_radius * explosion_factor), rootY + node_radius * 2 * explosion_factor + vert_buffer - node_radius);
                 ctx.stroke();
             }
         }
     }
 </script>
 
-<canvas id="headerGraph" style="width: 100%;" width="1000" height="1000"></canvas>
+
+${articleMid}
+!{makeTitle}[Self Balancing Binary Search Trees][May 20, 2021]
+
+<p>
+    Operations on binary search trees are faster when the tree is shorter.
+    The more nodes we can pack in each level of the tree, the faster our searches and insertions can run.
+    How do we ensure our trees are as densely filled as possible, so that we can quickly operate on them?
+</p>
+<p>
+    The self-balancing binary search tree was invented for this purpose.
+    The key idea is that you build a binary search tree with a series of insertion operations.
+    If we can think up a clever way to insert nodes, we can always ensure that our tree is as dense as possible.
+</p>
+<p>
+    The AVL tree had the first of these clever insertions.
+    Let's look at how it could work.
+    If we start with a single node, and insert a second one, the tree would look like the following:
+</p>
+<canvas id="headerGraph" style="width: 100%;" width="1000" height="375"></canvas>
 <script>
-        const canvas = document.getElementById("headerGraph");
-        if (canvas instanceof HTMLCanvasElement) {
-            canvas.style.height = getComputedStyle(canvas).width;
-            const ctx = canvas.getContext('2d');
-            let tree = new TreeNode(1);
-            tree.insert(new TreeNode(0));
-            tree.insert(new TreeNode(2));
-            tree.insert(new TreeNode(1.9));
-            tree.insert(new TreeNode(1.8));
-            tree.insert(new TreeNode(2.1));
-            tree.insert(new TreeNode(0.5))
-            tree.insert(new TreeNode(-1))
-            console.log(tree);
-            console.log(tree.width());
-            draw(tree, canvas, ctx)
-        }
+    const canvas = document.getElementById("headerGraph");
+    if (canvas instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvas.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(2));
+        canvas.height = 2 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvas, ctx)
+    }
 </script>
-]
+
+<p>
+    There's a root, and a single child.
+    This binary search tree is as dense as possible.
+    We know this because we couldn't rearrange any nodes to make the tree shorter.
+    The first layer can only have a single node, the second can have a maximum of two.
+    If we moved the 2 node around, it wouldn't change anything.
+</p>
+<p>
+    What if we inserted another node?
+</p>
+<canvas id="graphTwo" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasTwo = document.getElementById("graphTwo");
+    if (canvasTwo instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasTwo.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(3));
+        canvasTwo.height = 3 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasTwo, ctx)
+    }
+</script>
+<p>
+    Now there's a problem. Our tree is just a straight line of nodes. A linked list.
+    We have 3 slots for a height two tree, but we didn't fill all of them.
+    Instead we increased the height of the tree, which is costly for performance. 
+</p>
+
+<p>
+    We could take those same nodes and re-arrange them like so:
+</p>
+<canvas id="graphThree" style="width: 100%;" width="1000" height="375"></canvas>
+<script>
+    const canvasThree = document.getElementById("graphThree");
+    if (canvasThree instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasThree.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        canvasThree.height = 2 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasThree, ctx)
+    }
+</script>
+<p>
+    All we've done is move the 1 down and we have a fundamentally better tree.
+    Not a whole lot of work for a nice performance boost.
+</p>
+<p>
+    This is the key insight for creating a self balancing binary search tree.
+    If a tree is optimal, you will not be able to find any of these runs of three nodes.
+    So if we want to create a clever insertion algorithm, it should be looking to fix these runs of three nodes.
+</p>
+<p>
+    And we already know how to fix those runs.
+    Well, almost.
+    We have one more case to cover.
+</p>
+<canvas id="graphFour" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasFour = document.getElementById("graphFour");
+    if (canvasFour instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasFour.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(2));
+        canvasFour.height = 3 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasFour, ctx)
+    }
+</script>
+<p>
+    Fixing this one isn't so easy.
+    Before, we just dropped a 1 down.
+    Now, we need a slightly more complicated one.
+    A two step process.
+</p>
+<p>
+    First, we switch the 3 and the 2.
+</p>
+
+<canvas id="graphSix" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasSix = document.getElementById("graphSix");
+    if (canvasSix instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasSix.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(3));
+        canvasSix.height = 3 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasSix, ctx)
+    }
+</script>
+<p>
+    And look! It's the same case as before!
+    So we can do the same thing, and just move the 1 down.
+</p>
+<canvas id="graphSeven" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasSeven = document.getElementById("graphSeven");
+    if (canvasSeven instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasSeven.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        canvasSeven.height = 3 * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasSeven, ctx)
+    }
+</script>
+
+<script>
+    class AVLTreeNode {
+        constructor(value, left = null, right = null) {
+            this.value = value;
+            this.left = left;
+            this.right = right;
+        }
+
+        insert(treeNode) {
+            if (treeNode.value > this.value) {
+                if (this.right === null) this.right = treeNode;
+                else this.right.insert(treeNode)
+            } else {
+                if (this.left === null) this.left = treeNode;
+                else this.left.insert(treeNode)
+            }
+            this.balance();
+        }
+
+        balance(){
+            if(Math.abs(this.balanceFactor()) == 2){
+                console.log("balancing: ", this);
+                let childValues = [this.value];
+                let child = null;
+                let secondChild = null;
+                if(this.balanceFactor() < 0){
+                    child = this.left;
+                    childValues.push(this.left.value);
+                }else if (this.balanceFactor() > 0){
+                    child = this.right;
+                    childValues.push(this.right.value);
+                }
+
+                if(child.balanceFactor() < 0){
+                    secondChild = child.left;
+                    childValues.push(child.left.value);
+                }else if (child.balanceFactor() > 0){
+                    secondChild = child.right;
+                    childValues.push(child.right.value);
+                }
+
+
+                childValues.sort((a, b) => a - b);
+                console.log("three node run has values: ", ...childValues);
+                this.value = childValues[1];
+                this.left = new AVLTreeNode(childValues[0]);
+                this.right = new AVLTreeNode(childValues[2]);
+                console.log("New tree post balance is: ", this);
+            }
+        }
+
+        width() {
+            if (this.left == null && this.right == null) return 1;
+            else {
+                let sum = 0;
+                if (this.left != null) sum += this.left.width();
+                if (this.right != null) sum += this.right.width();
+                return sum;
+            }
+        }
+
+        height(){
+            let childHeight = 0;
+            if(this.left != null) childHeight = this.left.height();
+            if(this.right != null) childHeight = Math.max(childHeight, this.right.height());
+            return 1 + childHeight;
+        }
+        
+        balanceFactor(){
+            console.log(this.left);
+            let leftFactor = this.left === null ? 0 : this.left.height();
+            let rightFactor = this.right === null ? 0 : this.right.height();
+            return rightFactor - leftFactor;
+        }
+    }
+</script>
+<p>
+    Hopefully those ideas make the problem clear.
+    If we ever have a tree that isn't as dense as possible, it has a run of three nodes like that.
+    As an exercise to sharpen the idea, see if you can spot the problem in the following tree:
+</p>
+<canvas id="graphEight" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasEight = document.getElementById("graphEight");
+    if (canvasEight instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasEight.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(5));
+        canvasEight.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasEight, ctx)
+    }
+</script>
+<p>
+    Did you spot the trick?
+    The 2 -> 1 -> 0 run isn't a problem at all.
+    It is completely fine.
+    Let's pick just that part out.
+</p>
+<canvas id="graphNine" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasNine = document.getElementById("graphNine");
+    if (canvasNine instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasNine.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(0));
+        canvasNine.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasNine, ctx)
+    }
+</script>
+<p>
+    Because that 3 node is there, this is actually a perfectly fine tree.
+    We can't arrange just these nodes to create a tree that is any denser than this one.
+    The real problem was the 3 -> 4 -> 5 run.
+</p>
+<p>
+    Because that example was tricky to spot, its worth creating a stronger way to identify which runs of three nodes are problems and which aren't.
+</p>
+<p>
+    Runs of three nodes are just a proxy for the real problem, which is that the tree is unbalanced.
+    One branch is much bigger than the others, which means that we've wasted some space.
+    If all the branches are the same size, or pretty close to it (within 1 node), we know that the tree is perfectly dense.
+</p>
+<p>
+    For example, take another look at the tricky tree.
+    The left branch has only two nodes, and the right branch has three.
+    If we want a maximally dense tree, we would rather have shorter branches, so we should break up the longer branch.
+</p>
+<p>
+    How do we know where to make the change?
+    We consider which node begins our three node run.
+    And we can figure that out because a three node run has one branch that's bigger than the other.
+</p>
+<canvas id="graphTen" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasTen = document.getElementById("graphTen");
+    if (canvasTen instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasTen.getContext('2d');
+        let tree = new TreeNode(3);
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(5));
+        canvasTen.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasTen, ctx)
+    }
+</script>
+<p>
+    This is the problematic three node run from the tricky tree.
+    Because the right branch of the 3 node has two nodes, and the left branch has 0, we know that the tree is unbalanced.
+    To express this mathematically, we subtract the height of the branches.
+    In this case, 3 has a balance factor of 2. Because 2 - 0 = 2.
+</p>
+<p>
+    If the balance factor of a tree is 0, we are quite happy with that. That means that both branches have the same height.
+    If the balance factor is 1, we're okay with it, becuase there is a two node run somewhere, but no three node runs.
+    Let's consider the trick branch from earlier.
+</p>
+<canvas id="graphEleven" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const canvasEleven = document.getElementById("graphEleven");
+    if (canvasEleven instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = canvasEleven.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(0));
+        canvasEleven.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, canvasEleven, ctx)
+    }
+</script>
+<p>
+    The left branch has height two, the right branch has height 1, so our balance factor is -1 (1 - 2 = -1), and because it's a 1, we're okay.
+    The negative sign means that the tree is heavier on the left.
+    This is an arbitrary decision, but it's important to make a decision one way or the other so that you can use that extra information in your insertion algorithm later.
+</p>
+<p>
+    If that 3 node wasn't there, we would have a similar case as earlier, and would have a balance factor of -2, a problematic three node run, and we would need to fix it.
+</p>
+<p>
+    So now we know how to algorithmically spot these three node runs.
+    If any node has a balance factor of 2 or -2, we know it begins a three node run, and we have work to do.
+</p>
+<p>
+    So once we've spotted them, how do we fix them?
+    There are four cases for a three node run.
+    Let's look at all of them.
+</p>
+<canvas id="graphTwelve" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graphTwelve = document.getElementById("graphTwelve");
+    if (graphTwelve instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graphTwelve.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(3));
+        graphTwelve.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graphTwelve, ctx)
+    }
+</script>
+
+<canvas id="graphThirteen" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graphThirteen = document.getElementById("graphThirteen");
+    if (graphThirteen instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graphThirteen.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(2));
+        graphThirteen.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graphThirteen, ctx)
+    }
+</script>
+
+<canvas id="graphFourteen" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graphFourteen = document.getElementById("graphFourteen");
+    if (graphFourteen instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graphFourteen.getContext('2d');
+        let tree = new TreeNode(3);
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(1));
+        graphFourteen.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graphFourteen, ctx)
+    }
+</script>
+
+<canvas id="graphFifteen" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graphFifteen = document.getElementById("graphFifteen");
+    if (graphFifteen instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graphFifteen.getContext('2d');
+        let tree = new TreeNode(3);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(2));
+        graphFifteen.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graphFifteen, ctx)
+    }
+</script>
+<p>
+    In each of these, the root's balance factor is either 2 or -2.
+    And for each of them, we actually want them all to end up in the same configuration:
+</p>
+<canvas id="graphSixteen" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graphSixteen = document.getElementById("graphSixteen");
+    if (graphSixteen instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graphSixteen.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(3));
+        graphSixteen.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graphSixteen, ctx)
+    }
+</script>
+<p>
+    Each of them should end like that.
+    The middle number is the root, largest number to the right, smallest to the left.
+    This is the only way to arrange these 3 nodes in the densest way.
+    So now the question is, how do we have to wrangle each of those three node runs so that they become this?
+</p>
+<p>
+    Well one idea is just to build 3 nodes in that arrangement and slap that into the tree.
+    We find a node with balance factor 2 or -2, find its value and the other two values in the run.
+    We make a root node from the middle value and give it two children that we build from the lowest and highest values.    
+</p>
+<p>
+    Creating new nodes turns out to not be very helpful, let's look at yet another tricky tree.
+</p>
+<canvas id="graph17" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph17 = document.getElementById("graph17");
+    if (graph17 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph17.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(5));
+        graph17.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph17, ctx)
+    }
+</script>
+<p>
+    Spot the problem?
+    This tree is unbalanced, the right branch has a height of 3 and the left has a height of 1.
+    So this is a problem, because the 1 node has a balance factor of 2, so we need to fix it, but it's not a traditional three node run.
+</p>
+
+<p>
+    But, there is a sneaky three node run in there. Can you spot it?
+    Here's a hint: if we were to make the densest possible tree out of these nodes, which node has to be the root?
+</p>
+<p>
+    There are two options.
+    You could make 2 the root, and the tree looks like this:
+</p>
+<canvas id="graph18" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph18 = document.getElementById("graph18");
+    if (graph18 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph18.getContext('2d');
+        let tree = new TreeNode(2);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(5));
+        graph18.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph18, ctx)
+    }
+</script>
+
+<p>
+    Or you could make 3 the root, and it would look like:
+</p>
+<canvas id="graph19" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph19 = document.getElementById("graph19");
+    if (graph19 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph19.getContext('2d');
+        let tree = new TreeNode(3);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(5));
+        graph19.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph19, ctx)
+    }
+</script>
+<p>
+    Take a second and think about how you could transform the initial tree into either of those two?
+    Which is easier?
+</p>
+<p>
+    If we make 3 the root, we save ourself a whole lot of steps.
+    We made two changes.
+    We made 3 the parent of 1, and made 1 the parent of 2.
+    1 was already the parent of 0, and 4 was already the parent of 5, so we made very few changes.
+</p>
+<p>
+    If we made 2 the root, it would require us to do extra shuffling, so let's make 3 the root.
+</p>
+<p>
+    If we make 3 the root, it becomes nice and clear what happened.
+    We had a three node run of 1 -> 3 -> 4, and we contorted it just right so that the tree turned out nicely.
+    (And we chose 1 -> 3 -> 4 by following where the tree was unbalanced. 1 has a positive balance factor, and 4 has a positive balance factor, so we went right twice from the root)
+
+</p>
+<p>
+    The three node run we contorted was in the shape of one of the cases we considered earlier.
+</p>
+<canvas id="graph20" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph20 = document.getElementById("graph20");
+    if (graph20 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph20.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(3));
+        graph20.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph20, ctx)
+    }
+</script>
+<p>
+    And to do that, we contorted this by dropping the 1 down.
+    Take another look at the original tree:
+</p>
+<canvas id="graph21" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph21 = document.getElementById("graph21");
+    if (graph21 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph21.getContext('2d');
+        let tree = new TreeNode(1);
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(3));
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(5));
+        graph21.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph21, ctx)
+    }
+</script>
+<p>
+    Following the example, our goal is to move the 3 up to become the root, and move the 1 down.
+    But we can't move the 1 down, because there is a 2 where we are trying to move the 1 into.
+    In this case, we perform a handoff.
+    We give the left child of 3 (which is a 2) to the 1 node and it becomes a right child.
+    In other words, we inserted that 2 node into the 1 node, which is an important generalization in case the 1 node had multiple children.
+</p>
+<canvas id="graph22" style="width: 100%;" width="1000" height="500"></canvas>
+<script>
+    const graph22 = document.getElementById("graph22");
+    if (graph22 instanceof HTMLCanvasElement) {
+        // canvas.style.height = getComputedStyle(canvas).width;
+        const ctx = graph22.getContext('2d');
+        let tree = new TreeNode(3);
+        tree.insert(new TreeNode(1));
+        tree.insert(new TreeNode(2));
+        tree.insert(new TreeNode(0));
+        tree.insert(new TreeNode(4));
+        tree.insert(new TreeNode(5));
+        graph22.height = tree.height() * (2 * node_radius * explosion_factor + vert_buffer)
+        draw(tree, graph22, ctx)
+    }
+</script>
+
+<p>
+    This reflects a general pattern.
+    There are 4 possible cases for a tree being unbalanced.
+    We enumerated all of those earlier.
+    There is one way that we can fix each of those.
+    In this case we moved the middle node up and the left node down.
+    Each of those 4 cases has their own special operation that will fix them, and we call those operations rotations.
+    And we know that whenever we insert a node into an already balanced tree, it can only change the balance factor by at most 1, and a balanced tree has only balance factors of 0 or 1,
+    so there's no way you can create any case other than one of the 4 we've already figured out how to solve.
+</p>
+
+<p>
+    So how do we know that this is actually going to work?
+    When we initially insert an element, the tree can unbalance.
+    If we have only 3 nodes, and they are unbalanced, we know for certain that the rotations will balance the tree, because we defined those operations
+    to be whatever fixes them.
+</p>
+<p>
+    If we have more than 3 nodes, we know that unbalancing a tree can only happen in a three node run, so if those nodes are nice, and don't have any children,
+    then it's basically the same case as just having one of those four base cases, and we're good.
+</p>
+<p>
+    If the nodes in the run have children, like in the tricky case we just went over, then we have some problems, but those can be solved too!
+    If we just pop the problem children off, and insert them back into the tree, it has the same effect as handing it off, just like we did earlier.
+</p>
+
+${articleEnd}
