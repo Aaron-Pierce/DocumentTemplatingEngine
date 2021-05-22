@@ -1,0 +1,540 @@
+${articleOpen}
+!{makeMeta}[Math Crumbs - apierce.dev][Explaining a few bits of math that always went unjustified]
+${mathjaxInit}
+${articleMid}
+!{makeTitle}[Math Crumbs][May 22, 2021]
+
+<p>
+    Whenever I play the "how?" game, it never goes very far.<br>
+    For example: The derivative gives the slope of the tangent line.<br>
+    How? By giving you a function whose values are the slopes of the tangent lines.<br>
+    How? By using one of the derivative rules. <br>
+    How do you get those?
+</p>
+<p>
+    Okay so that last one is a bit of a stretch on the "how?" theme, but
+    in every calculus class I have ever seen those rules were immaculately concepted.
+    Nobody ever talked about where they came from or how the person that invented them did it.
+    And in fact, it's pretty easy to explain!
+</p>
+<p>
+    I call this a math crumb - a bit of math that has a nice explanation that nobody takes the time to motivate, or give
+    at all.
+    For the first of these math crumbs let's start with the:
+</p>
+<h1>Power Rule</h1>
+<p>
+    If you want to know how quickly a function is changing - maybe you have a position function and you want velocity -
+    you can take a derivative.
+    To find this, we want to take a small run and see what the resulting rise is.
+    In other words, you take a step along the function and see how much your position changed.
+</p>
+<p>
+    Let's take a function, say $f(x) = x^2$.
+    If we take a small step along that function of size $\Delta x$, that starts at position $x$, our final x position is
+    $x + \Delta x$.
+    If we evaluate the function at that point, $f(x + \Delta x)$, and subtract the value at the original position, $f(x
+    + \Delta x) - f(x)$,
+    we are given the change in position.
+    You may recognize that ass the numerator of the limit definition of the derivative.
+</p>
+<p>
+    But what I always missed was what that expression actually looks like. Let's evaluate it for $f(x)$ from earlier.
+<div class="math">
+    $
+    \begin{aligned}
+    f(x + \Delta x) - f(x) &= (x + \Delta x)^2 - x^2\\
+    &=x^2 + 2x\Delta x + \Delta x^2 - x^2\\
+    &= 2x\Delta x + \Delta x^2
+    \end{aligned}$
+</div>
+So for any step $\Delta x$, we will increase our height by $2x\Delta x + \Delta x^2$.
+This represents the value that the function will change by.
+The rate at which the function changes comes when we consider the slope of that change.
+That is the rise that resulted from the run $\Delta x$, so if we divide by our run, we get our slope, which is
+$2x + \Delta x$.
+</p>
+<p>
+    If we make increasingly smaller steps, we can say that the $\Delta x$ term becomes insignificant.
+    This leaves us with the rate of change of the function, which is $2x$.
+</p>
+<p>
+    If you say that the power rule is a direct result of the limit definition of a derivative, it's only satisfying if
+    you understand the limit definition.
+    And in general, the power rule is a result of FOILing. Multiplying out $(x + \Delta x)^3$ or $5(x + \Delta x)^3 -
+    2(x + \Delta x)^2$ will only leave you with
+    the original, which you will subtract off, and a most significant term.
+</p>
+<p>
+    That most significant term has the next highest $x$ power, which means it has only 1 instance of $\Delta x$, which
+    gets infinitely small.
+</p>
+<p>
+    Let's just foil this out.
+<div class="math">
+    $
+    \begin{aligned}
+    &(x + \Delta x)^3 - x^3 \\
+    &= x^3 + 3x^2\Delta x + 3x(\Delta x)^2 + (\Delta x)^3 - x^3\\
+    &= 3x^2\Delta x + 3x(\Delta x)^2 + (\Delta x)^3
+    \end{aligned}
+    $
+</div>
+If we divide this by $\Delta x$ again, to get a slope
+<div class="math">
+    $
+    \begin{aligned}
+    \frac{1}{\Delta x}(3x^2\Delta x + 3x(\Delta x)^2 + (\Delta x)^3)\\
+    = 3x^2 + 3x\Delta x + (\Delta x)^2
+    \end{aligned}
+    $
+</div>
+And as $\Delta x$ gets infinitely small, everything but $3x^2$ goes away.
+This is a direct result of FOILing. Only one term of the fully FOIL'd out expression will have exactly 1 $\Delta x$.
+After being divided by $\Delta x$, to get a slope, that term will have no $\Delta x$, so it will be all that is left.
+</p>
+
+<h1>
+    Fractional Powers
+</h1>
+<p>
+    This one is short, but nobody ever explained this one to me either.
+</p>
+<p>
+    If we have a number, say $2^3$, and multiply it by another exponent of $2$, say $2^5$, we can write out all of those
+    $2$s.<br>
+<div class="math">
+    $2^3 \cdot 2^5 = 2 \cdot 2 \cdot 2 \cdot 2 \cdot 2 \cdot 2 \cdot 2 \cdot 2$
+</div>
+and then convert them to a new exponent, which is $2^8$, which you get just by counting the $2$s.
+You have 3 copies of 2. You add 5 copies of 2, you get 8.
+</p>
+<p>
+    So in general, $2^a \cdot 2^b = 2^{a + b}$.
+</p>
+<p>
+    But sometimes we put fractions in the power, like $2^\frac{1}{2}$.
+    If $2^8$ means writing a 2 out 8 times, how do you write 2 a half a time?
+</p>
+<p>
+    You can't. You are completely right to think that writing $2^\frac{1}{2}$ is nonsense.
+    However, let me pose a question.
+    Is there a number $a$ that satisfies $2^a \cdot 2^a = 2$?
+    In other words, $2^{a + a} = 2?$
+</p>
+<p>
+    Well we know that $2^1 = 2$, so $a$ must be $\frac{1}{2}$
+</p>
+<p>
+    And if this number, $(2^a)^2 = 2$, then $2^a = \sqrt{2}$
+    And if $a = \frac{1}{2}$, then $2^\frac{1}{2} = \sqrt{2}$
+</p>
+<p>
+    We write square roots as fractional powers becuase we want
+    $2^\frac{1}{2} \cdot 2^\frac{1}{2}$ to equal $2^{\frac{1}{2} + \frac{1}{2}}$, which equals 1.
+</p>
+<p>
+    (Also, did you catch me cheating? I snuck in the fact that $2^{2a} = (2^a)^2$.
+    That was because we had $2^a \cdot 2^a$, and multiplying a number times itself is the same as squaring.
+    That's one motivation/explanation for why $(2^a)^b = 2^{ab}$.
+    The other is just to write $2^a$ down $b$ times, but that's no fun)
+</p>
+
+<h1>
+    Re-Inventing Trig
+</h1>
+<p>
+    All right triangles are circles.
+    Let me explain.
+</p>
+<p>
+    If you want to make a right triangle, all you need is a hypotenuse.
+</p>
+<div class="math">
+    <canvas id="graph1" width="200" height="200"></canvas>
+</div>
+<script>
+    //create a scope so that I can copy/paste this
+    //without changing variable names
+    if (true) {
+        let canvas = document.getElementById("graph1");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(0, 200)
+            ctx.lineTo(200, 0);
+            ctx.stroke();
+        }
+    }
+</script>
+<p>
+    And then you can drop the hypotenuse onto each axis, to create the other two legs of the triangle.
+</p>
+<div class="math">
+    <canvas id="graph2" width="205" height="205"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("graph2");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, 200)
+            ctx.lineTo(200, 0);
+            ctx.moveTo(200, 0);
+            ctx.lineTo(200, 200);
+            ctx.moveTo(200, 200);
+            ctx.lineTo(0, 200);
+            ctx.stroke();
+        }
+    }
+</script>
+<p>
+    If you want to make a right triangle with hypotenuse length $r$, you create a circle of radius $r$.
+</p>
+<div class="math">
+    <canvas id="graph3" width="205" height="205"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("graph3");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 100, 100, 0, 0, 2 * 3.1415);
+            ctx.stroke();
+            ctx.moveTo(102.5, 102.5);
+            ctx.lineTo(102.5 + 100, 102.5)
+            ctx.stroke();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.lineWidth = 1;
+            ctx.font = "35px latex"
+            ctx.fillText("r", 102.5 + 50, 102.5 - 25);
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 3, 3, 0, 0, 2 * 3.1415);
+            ctx.fill();
+        }
+    }
+</script>
+
+<p>
+    And pick some angle
+</p>
+<div class="math">
+    <canvas id="graph4" width="205" height="205"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("graph4");
+        if (canvas instanceof HTMLCanvasElement) {
+            const theta = Math.PI / 4;
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 100, 100, 0, 0, 2 * 3.1415);
+            ctx.stroke();
+            ctx.moveTo(102.5, 102.5);
+            ctx.lineTo(102.5 + 100 * Math.cos(theta), 102.5 - 100 * Math.sin(theta))
+            ctx.stroke();
+            ctx.textAlign = "end";
+            ctx.textBaseline = "bottom";
+            ctx.lineWidth = 1;
+            ctx.font = "35px latex";
+            ctx.fillText("r", 102.5 + 50 * Math.cos(theta), 102.5 - 50 * Math.sin(theta));
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 3, 3, 0, 0, 2 * 3.1415);
+            ctx.fill();
+        }
+    }
+</script>
+
+<p>
+    And drop the x and y components down.
+</p>
+<div class="math">
+    <canvas id="graph5" width="205" height="205"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("graph5");
+        if (canvas instanceof HTMLCanvasElement) {
+            const theta = Math.PI / 4;
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 100, 100, 0, 0, 2 * 3.1415);
+            ctx.stroke();
+            ctx.moveTo(102.5, 102.5);
+            ctx.lineTo(102.5 + 100 * Math.cos(theta), 102.5 - 100 * Math.sin(theta))
+            ctx.stroke();
+            ctx.textAlign = "end";
+            ctx.textBaseline = "bottom";
+            ctx.font = "35px latex";
+            ctx.fillText("r", 102.5 + 50 * Math.cos(theta), 102.5 - 50 * Math.sin(theta));
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.ellipse(102.5, 102.5, 3, 3, 0, 0, 2 * 3.1415);
+            ctx.fill();
+
+
+            ctx.font = "25px latex";
+
+            ctx.strokeStyle = "red";
+            ctx.beginPath();
+            ctx.moveTo(102.5, 102.5);
+            ctx.lineTo(102.5 + 100 * Math.cos(theta), 102.5);
+            ctx.lineTo(102.5 + 100 * Math.cos(theta), 102.5 - 100 * Math.sin(theta))
+            ctx.stroke();
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("x", 102.5 + 50 * Math.cos(theta), 102.5 + 25/2)
+            ctx.fillText("y", 102.5 + 100 * Math.cos(theta) - 25 / 2, 102.5 - 50*Math.sin(theta) + 3)
+        }
+    }
+</script>
+<p>
+    And you've created a right triangle.
+    What are the lengths of those $x$ and $y$ components (highlighted in red)?
+    How can we figure that out?
+</p>
+<p>
+    Well, we could just measure them.
+    If you put a ruler to the x axis and y axis, you could just read off the lengths of those components.
+    That's a little inconvenient to do for every right triangle you want to get the components of.
+</p>
+<p>
+    Instead, let's only measure once.
+    If you take a circle of radius 5 and make a right triangle out of it, you have to make the circle and then pick an
+    angle for your hypotenuse.
+    If you made a right triangle from a circle of radius 1, but with the exact same angle, its components will be
+    exactly one fifth the size of the components of the radius 5 right triangle.
+    (To quickly justify this, imagine two triangles, one with angle 0, and the other with angle $\frac{\pi}{2}$.
+    Those are a perfectly horizontal line, and a perfectly vertical line.
+    They have lengths equal to the radius of the circle, becuase they are themselves radii.
+    Any other triangle from that circle has components who are built from some factor of those components, so that
+    combination will also be scaled by the radius of the circle)
+</p>
+
+<div class="math">
+    <canvas id="graph6" width="505" height="505" style="width: 100%;"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("graph6");
+        if (canvas instanceof HTMLCanvasElement) {
+
+            const theta = Math.PI / 4;
+            let ctx = canvas.getContext("2d");
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const smallRadius = 75;
+            const smallCircleOriginX = smallRadius + 5;
+            const smallCircleOriginY = 505 / 2;
+            ctx.ellipse(smallRadius + 5, 505 / 2, smallRadius, smallRadius, 0, 0, 7);
+            ctx.stroke();
+
+            const bigRadius = 150;
+            const bigCircleOriginX = 505 - (bigRadius + 5);
+            const bigCircleOriginY = 505 / 2;
+            ctx.beginPath();
+            ctx.strokeStyle = "black";
+            ctx.ellipse(bigCircleOriginX, bigCircleOriginY, bigRadius, bigRadius, 0, 0, 7);
+            ctx.stroke();
+
+            function drawTriangle(originX, originY) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(originX, originY, smallRadius);
+                ctx.lineTo(originX + Math.cos(theta) * smallRadius, originY - Math.sin(theta) * smallRadius);
+                ctx.stroke();
+
+                ctx.strokeStyle = "green"
+                ctx.textAlign = "end";
+                ctx.textBaseline = "bottom";
+                ctx.font = "25px latex";
+                ctx.fillText("r", originX + 0.5 * Math.cos(theta) * smallRadius, originY - 0.5 * Math.sin(theta) * smallRadius);
+
+                ctx.moveTo(originX, originY);
+                ctx.lineTo(originX + Math.cos(theta) * smallRadius, originY);
+                ctx.stroke();
+                ctx.textAlign = "center";
+                ctx.fillText("x", originX + 0.5 * Math.cos(theta) * smallRadius, originY + 25);
+
+                ctx.lineTo(originX + Math.cos(theta) * smallRadius, originY);
+                ctx.lineTo(originX + Math.cos(theta) * smallRadius, originY - Math.sin(theta) * smallRadius);
+                ctx.stroke();
+                ctx.textBaseline = "middle";
+                ctx.fillText("y", originX + Math.cos(theta) * smallRadius - 25 / 2, originY - 0.5 * Math.sin(theta) * smallRadius + 3);
+                ctx.strokeStyle = "black";
+                ctx.restore();
+            }
+
+            ctx.beginPath();
+            ctx.strokeStyle = "red"
+            ctx.moveTo(bigCircleOriginX + smallRadius * Math.cos(theta), bigCircleOriginY);
+            ctx.lineTo(bigCircleOriginX + 2 * smallRadius * Math.cos(theta), bigCircleOriginY);
+            ctx.stroke();
+            ctx.fillStyle = "red";
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = "25px latex";
+
+            ctx.fillText("x", bigCircleOriginX + 1.5 * smallRadius * Math.cos(theta), bigCircleOriginY + 12.5);
+
+
+            ctx.beginPath();
+            ctx.moveTo(bigCircleOriginX + 2 * smallRadius * Math.cos(theta), bigCircleOriginY);
+            ctx.lineTo(bigCircleOriginX + 2 * smallRadius * Math.cos(theta), bigCircleOriginY - smallRadius * Math.sin(theta));
+            ctx.stroke();
+            ctx.fillText("y", bigCircleOriginX + 2 * smallRadius * Math.cos(theta) + 25 / 2, bigCircleOriginY - 0.5 * Math.sin(theta) * smallRadius + 3);
+
+
+            // ctx.strokeStyle = "red";
+            // ctx.beginPath();
+            // ctx.lineWidth = 6;
+            // ctx.moveTo(bigCircleOriginX, bigCircleOriginY);
+            // ctx.lineTo(bigCircleOriginX + bigRadius * Math.cos(theta), bigCircleOriginY - bigRadius * Math.sin(theta));
+            // ctx.lineTo(bigCircleOriginX + bigRadius * Math.cos(theta), bigCircleOriginY);
+            // ctx.lineTo(bigCircleOriginX, bigCircleOriginY);
+            // ctx.stroke();
+
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "black";
+            ctx.lineWidth = 2;
+            drawTriangle(smallCircleOriginX, smallCircleOriginY)
+            drawTriangle(bigCircleOriginX, bigCircleOriginY);
+            drawTriangle(bigCircleOriginX + Math.cos(theta) * smallRadius, bigCircleOriginY - Math.sin(theta) * smallRadius);
+        }
+    }
+</script>
+<p>
+    This picture makes it clearer.
+    The left circle has radius $r$, the right has radius $2r$, because $r + r = 2r$.
+    You can visually see that the components of a triangle created from the hypotenuse of the right circle will have
+    components that are twice the size of the small triangle's,
+    because we made the radius 2 triangle from stacking 2 radius 1 triangles next to each other, and that new triangle
+    has an x-component with length $2x$ and a y-component with length $2y$
+</p>
+<p>
+    So if we know the measurements of every triangle of hypotenuse length 1, we can calculate the measurements of every
+    other right triangle.
+    We figure out what angle the hypotenuse has, find the measurements of the length 1 right triangle with that angle,
+    and multiply it by the length of the original triangle's hypotenuse.
+</p>
+<p>
+    To find those measurements of the length 1 hypotenuse, you can just look them up in a table.
+    We have named those tables $\sin(\theta)$ and $\cos(\theta)$.
+    When you plug in the angle of your right triangle, $\theta$, it spits out the measurement of the component of the
+    hypotenuse length 1 triangle with the same angle $\theta$.
+</p>
+<p>
+    Let's go ahead take all of those measurements. We'll use $\sin(\theta)$ - the size of the y component.
+</p>
+<div class="math">
+    <canvas id="graph7" width="500" height="205" style="width: 100%;"></canvas>
+</div>
+<script>
+
+    let frameCount = 0;
+    function animate() {
+        let canvas = document.getElementById("graph7");
+        if (canvas instanceof HTMLCanvasElement) {
+
+            const theta = Math.PI / 4;
+            const radius = 100;
+            let ctx = canvas.getContext("2d");
+            const originX = 5 + radius;
+            const originY = canvas.height / 2;
+            ctx.lineWidth = 2;
+
+
+            if (frameCount > 60 * Math.PI) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                frameCount = 0;
+            }
+
+
+            ctx.beginPath();
+            ctx.ellipse(originX, originY, radius, radius, 0, 0, 7)
+
+            ctx.fillStyle = "white"
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "black"
+
+
+            ctx.beginPath();
+            ctx.ellipse(originX, originY, 2.5, 2.5, 0, 0, 7)
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX + radius * Math.cos(frameCount / 30), originY - radius * Math.sin(frameCount / 30));
+            ctx.stroke();
+
+            ctx.save();
+            ctx.strokeStyle = "red";
+            ctx.beginPath();
+            ctx.moveTo(originX + radius * Math.cos(frameCount / 30), originY - radius * Math.sin(frameCount / 30));
+            ctx.lineTo(originX + radius * Math.cos(frameCount / 30), originY);
+            ctx.stroke();
+            ctx.strokeStyle = "black";
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX + radius * Math.cos(frameCount / 30), originY);
+            ctx.stroke();
+            ctx.restore();
+
+            //draw graph
+
+            const graphOriginX = canvas.width / 2;
+            const graphOriginY = canvas.height / 2;
+            const graphHeight = 2 * radius;
+            const graphWidth = graphHeight;
+
+            ctx.beginPath();
+            ctx.moveTo(graphOriginX, graphOriginY - graphHeight / 2);
+            ctx.lineTo(graphOriginX, graphOriginY + graphHeight / 2);
+            ctx.moveTo(graphOriginX, graphOriginY);
+            ctx.lineTo(graphOriginX + graphWidth, graphOriginY);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.save();
+            ctx.strokeStyle = "red";
+            ctx.fillStyle = "red";
+            ctx.ellipse(graphOriginX + graphWidth * (frameCount / (30 * 2 * Math.PI)), graphOriginY - 0.5 * Math.sin(frameCount / 30) * graphHeight, 2, 2, 0, 0, 7);
+            // ctx.moveTo(graphOriginX + graphWidth * (frameCount / (30 * 2 * Math.PI)), graphOriginY);
+            // ctx.lineTo(graphOriginX + graphWidth * (frameCount / (30 * 2 * Math.PI)), graphOriginY - 0.5 * Math.sin(frameCount / 30) * graphHeight);
+            ctx.stroke();
+            ctx.fill();
+            ctx.closePath();
+            ctx.restore();
+
+            // frameCount = frameCount % 60;
+            requestAnimationFrame(animate);
+        }
+
+        frameCount++;
+    }
+
+    requestAnimationFrame(animate);
+</script>
+<p>
+    At each point of the graph on the right, the function has the same height as the tip of the radius on the left.
+    In other words, each point's height is the length of the y component of the triangle formed from the radius on the left.
+</p>
+<p>
+    I hope this has illuminated how trig functions can be relevant to both circles and triangles - because triangles are circles!
+    And that the $\sin$ and $\cos$ functions are just a table of values, precalculated based on the measurements we took of a right triangle with hypotenuse length 1.
+    When we do all of those calculations and plot them, we see the classic sine wave, as the animation drew.
+</p>
+${articleEnd}

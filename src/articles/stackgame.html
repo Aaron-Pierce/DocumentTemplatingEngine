@@ -1,0 +1,169 @@
+${articleOpen}
+!{makeMeta}[The Stack Game - apierce.dev][A webgame based on a stack data structure]
+
+<style>
+    .stackCell {
+        width: 0.75in;
+        height: 0.75in;
+        border: 2px solid black;
+        border-bottom: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stackCell:last-of-type {
+        border-bottom: 2px solid black;
+    }
+
+    #stack {
+        text-align: center;
+        width: fit-content;
+    }
+
+    #stackWrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
+
+${articleMid}
+!{makeTitle}[The Stack Game][May 21, 2021]
+<p>
+    Try to clear the stack (have only a 0 element in it).
+    The add button pops two elements from the stack and pushes the sum.
+    The Subtract 1 and Negate button pops an element from the stack, subtracts 1, multiplies it by -1, and pushes it back.
+    The game will automatically reset when you win.
+</p>
+<div id="stackWrapper">
+    <div id="stack">
+
+    </div>
+    <button id="addButton">Add</button>
+    <button id="sub1NegateButton">Subtract 1 and Negate</button>
+    <button id="retryButton">Retry</button>
+</div>
+
+<script>
+
+    class Stack {
+        constructor(max_size) {
+            this.max_size = max_size;
+            this.array = [];
+
+
+            let stackDomElement = document.getElementById("stack");
+            for (let i = max_size - 1; i >= 0; i--) {
+                let cell = document.createElement("div");
+                cell.id = "cell" + i;
+                cell.classList.add("stackCell");
+                stackDomElement.appendChild(cell);
+            }
+        }
+
+        updateDomElement() {
+            for (let i = 0; i < this.max_size; i++) {
+                let toDisplay = this.array[i] === undefined ? "" : this.array[i];
+                console.log("id: " + "cell" + i);
+                document.getElementById("cell" + i).innerHTML = "<h1>" + toDisplay + "</h1>"
+            }
+        }
+
+        checkCompleted() {
+            if (this.size() == 0 || (this.size() == 1 && this.array[0] === 0)) {
+                console.log("completed puzzle");
+                restart();
+            }
+        }
+
+        push(e) {
+            if (this.array.length == this.max_size) {
+                throw "StackOverflow";
+                return;
+            }
+            this.array.push(e);
+            this.updateDomElement();
+        }
+
+        pop(e) {
+            if (this.array.length == 0) {
+                throw "StackUnderflow";
+                return;
+            }
+            let value = this.array.pop(e);
+            this.updateDomElement();
+            return value;
+        }
+
+        size() {
+            return this.array.length;
+        }
+    }
+
+    let stack = new Stack(7);
+
+    document.getElementById("addButton").addEventListener("click", (evt) => {
+        if (stack.size() >= 2) {
+            stack.push(stack.pop() + stack.pop());
+        }
+        stack.checkCompleted();
+    })
+
+    document.getElementById("sub1NegateButton").addEventListener("click", (evt) => {
+        if (stack.size() >= 1) {
+            stack.push(-1 * (stack.pop() - 1));
+        }
+        stack.checkCompleted();
+    })
+
+
+    function randFactor(n) {
+        let factors = [1, n];
+        for (let i = 2; i < n; i++) {
+            if (n % i == 0) factors.push(i)
+        }
+        return factors[Math.floor(Math.random() * factors.length)];
+    }
+
+    function randInt(){
+        return Math.floor(Math.random() * 20) - 10
+    }
+
+    function pathToN(n) {
+        let rnd = Math.random();
+        if (rnd < 0.5 && stack.size() < stack.max_size) {
+            //add
+            let randK = randInt();
+            console.log("Add ", n + randK, -randK);
+            return [n + randK, -randK];
+        } else {
+            //subtract 1 and negate
+            console.log("s1n ", -n + 1);
+            return [-n + 1];
+        }
+    }
+
+    let lastSet = [];
+
+    function restart() {
+        let testStack = [0];
+        for (let i = 0; i < stack.max_size - 1; i++)
+            testStack.push(...pathToN(testStack.pop()));
+        console.log(testStack);
+
+        stack.array = testStack;
+        lastSet = [];
+        testStack.forEach(e => lastSet.push(e))
+        stack.updateDomElement();
+    }
+    restart();
+
+    document.getElementById("retryButton").addEventListener("click", evt => {
+        stack.array = [];
+        lastSet.forEach(e => stack.array.push(e))
+        stack.updateDomElement();
+    })
+</script>
+
+${articleEnd}
