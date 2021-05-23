@@ -1,0 +1,477 @@
+${articleOpen}
+!{makeMeta}[Smooth Curves in HTML Canvases - apierce.dev][Exploring bezier and quadratic curves]
+${mathjaxInit}
+
+${articleMid}
+!{makeTitle}[Smooth Curves in HTML Canvases][May 23, 2021]
+<p>
+    If you want to create graphs in a canvas element (which I needed to do in my articles on <a
+        href="/etothex">e<sup>x</sup></a> and <a href="/mathcrumbs#trig">trig</a>),
+    you'll need some way to draw smooth curves.
+    I used terrible hacks in both of those articles, so let's do it right.
+</p>
+<p>
+    The <span class="code">CanvasRenderingContext2D</span> interface provides two methods that are intended to do this,
+    <span class="code">bezierCurveTo()</span> and
+    <span class="code">quadraticCurveTo()</span>.
+    As it turns out, they're actually both bezier curves.
+    What's a bezier curve, and why have two methods to draw them?
+</p>
+<h2>
+    Bezier Curves
+</h2>
+<canvas id="canvas1" style="width: 100%; border: 1px solid black;" width="500" height="500"></canvas>
+<p class="caption">
+    A Bezier curve with 1 control point, sweeping around in a circle
+</p>
+
+<script>
+    let canvas = document.getElementById("canvas1");
+    if (canvas instanceof HTMLCanvasElement) {
+
+        let ctx = canvas.getContext("2d");
+        requestAnimationFrame(animate);
+
+        frameCount = 0;
+        function animate() {
+            if (!(canvas instanceof HTMLCanvasElement && ctx instanceof CanvasRenderingContext2D)) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let controlPoint = [canvas.width / 2 + 220 * Math.cos((frameCount) / 60), canvas.width / 2 - 220 * Math.sin((frameCount) / 60)];
+
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 4, canvas.height * 3 / 4);
+            ctx.quadraticCurveTo(...controlPoint, canvas.width * 3 / 4, canvas.height / 4);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            frameCount++;
+            requestAnimationFrame(animate);
+        }
+    }
+</script>
+
+
+<p>
+    A bezier curve is built from a line that is pulled in the direction of any number of control points.
+    In the animation above, the endpoints form the straight line, and the moving point is the only control point.
+    How can we make a curve that is 'pulled' towards a point?
+</p>
+<p>
+    Let's start with a line.
+</p>
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas2" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas2");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+            ctx.lineTo(...endPoint);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+        }
+    }
+</script>
+<p>
+    And if we want to create a simple curve, we could pull that line in a direction.
+    Let's add a third point that we want to pull the curve towards.
+</p>
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas3" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas3");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            let controlPoint = [canvas.width / 2 - 120 * Math.cos(Math.PI / 4), canvas.width / 2 - 200 * Math.sin(Math.PI / 4)];
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+            ctx.lineTo(...endPoint);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+        }
+    }
+</script>
+<p>
+    How can we do that pulling?
+    First, let's clarify what our line actually is.
+    I mentioned HTML canvas in the title of the article, but let's start with the math first, becuase bezier curves are
+    really mathematical objects.
+</p>
+<p>
+    A bezier curve is a parametric curve.
+    What we just drew was a line, which can be nicely parameterized by $L(t) = P_0 + t(P_1 - P_0)$, where $P_0$ and
+    $P_1$ are the bottom left and top right points, respectively.
+    $L(t)$ is itself a point. If you draw every point $L(t)$ for $0 \leq t \leq 1$, it will draw the above line.
+</p>
+<p>
+    How can we parameterize a curve that takes that line and perturbs it in some way that pulls the line towards the
+    third point?
+</p>
+<p>
+    We could add another vector!
+    We parameterize a line by pointing a vector between the first and second points and moving along them.
+    Let's point another vector towards the control point!
+</p>
+<p>
+    If we point a constant vector towards it, we'll just miss our second point.
+    We need to vary this vector somehow, and we need this variation to be parabolic.
+    The vector should have no effect at the endpoints, and maximal effect at the nearest point to the third point
+    (called the control point).
+</p>
+<p>
+    That's a lot of math, though. We need to project the control point onto the line, find where it should be maximally
+    effective, build a parabola around that, multiply the vector.
+</p>
+<p>
+    But wait, there's a bigger problem!
+    (And I only discovered this problem implementing the above idea)
+    The curve we need isn't actually parabolic!
+    Depending on where the point is along the line, you need your 'parabolic' curve to lean towards that.
+    And because we need the endpoints of our straight line to be solutions to this parabola, this only works if the
+    point is in the middle.
+    Therefore, we need a smooth curve that shares endpoints with a straight line and bends towards the control point.
+</p>
+<p>
+    So to build a smooth curve pulled towards the point, requires another smooth curve pulled towards the point, if we
+    do it this way.
+</p>
+<p>
+    There's an easier way.
+    Let's draw a line from the start point to the control, and from the control to the end point.
+</p>
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas4" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas4");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            let vector = [endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]];
+            let controlPoint = [canvas.width / 2 - 120 * Math.cos(Math.PI / 4), canvas.width / 2 - 200 * Math.sin(Math.PI / 4)];
+            let stcVector = [controlPoint[0] - startPoint[0], controlPoint[1] - startPoint[1]];
+            let len_stcVector = Math.sqrt(stcVector[0] ** 2 + stcVector[1] ** 2);
+
+            console.log(vector, stcVector);
+            let vecAngle = Math.atan2(vector[1], -vector[0]);
+            let controlAngle = Math.atan2(stcVector[1], -stcVector[0]);
+            console.log(controlAngle, vecAngle);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+
+            ctx.beginPath();
+            ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+            ctx.lineTo(startPoint[0] + stcVector[0], startPoint[1] + stcVector[1]);
+            ctx.stroke();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(...controlPoint);
+            ctx.lineTo(...endPoint);
+            ctx.stroke();
+        }
+    }
+</script>
+
+<p>
+    And now you're going to perform a feat of immaculate genius.
+    I genuinely don't know how you came up with this, but it's a REALLY neat idea.
+    Let's make a line that slides along both of those lines.
+</p>
+
+
+
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas5" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas5");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            let vector = [endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]];
+            let controlPoint = [canvas.width / 2 - 120 * Math.cos(Math.PI / 4), canvas.width / 2 - 200 * Math.sin(Math.PI / 4)];
+            let stcVector = [controlPoint[0] - startPoint[0], controlPoint[1] - startPoint[1]];
+            let cteVector = [endPoint[0] - controlPoint[0], endPoint[1] - controlPoint[1]];
+            let len_stcVector = Math.sqrt(stcVector[0] ** 2 + stcVector[1] ** 2);
+
+            console.log(vector, stcVector);
+            let vecAngle = Math.atan2(vector[1], -vector[0]);
+            let controlAngle = Math.atan2(stcVector[1], -stcVector[0]);
+            console.log(controlAngle, vecAngle);
+
+            let angleBetween = (stcVector[0] * vector[0] + stcVector[1] * vector[1]) / (len_stcVector * Math.sqrt(vector[0] ** 2 + vector[1] ** 2));
+            let frameCount = 0;
+
+            const framesPerOscillation = 120;
+
+            function animate() {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.2)"
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "black";
+
+                //plotted this in desmos.
+                //the idea is that it has two solutions, x = 0 and x = 120
+                //it goes from 0 to 1, so the parametric line will still make sense.
+                let progressCurve = Math.sin(frameCount / framesPerOscillation * Math.PI) ** 2;
+
+
+                let slidingStart = [startPoint[0] + progressCurve * stcVector[0], startPoint[1] + progressCurve * stcVector[1]];
+                let slidingEnd = [controlPoint[0] + progressCurve * cteVector[0], controlPoint[1] + progressCurve * cteVector[1]];
+
+
+                ctx.save();
+                // if(frameCount > 60) ctx.strokeStyle = "white";
+                ctx.beginPath();
+                ctx.moveTo(...slidingStart);
+                ctx.lineTo(...slidingEnd);
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.beginPath();
+                ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(...startPoint);
+                ctx.lineTo(startPoint[0] + stcVector[0], startPoint[1] + stcVector[1]);
+                ctx.stroke();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(...controlPoint);
+                ctx.lineTo(...endPoint);
+                ctx.stroke();
+
+
+                frameCount++;
+                frameCount = frameCount % framesPerOscillation;
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+        }
+    }
+</script>
+
+<p>
+    And you can kind of see that it sweeps out a curve.
+    Each of those lines looks almost like a tangent line to a curve we may want, so let's imagine that it is, and draw
+    all the points where the line would touch the curve.
+</p>
+
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas6" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas6");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            let vector = [endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]];
+            let controlPoint = [canvas.width / 2 - 120 * Math.cos(Math.PI / 4), canvas.width / 2 - 200 * Math.sin(Math.PI / 4)];
+            let stcVector = [controlPoint[0] - startPoint[0], controlPoint[1] - startPoint[1]];
+            let cteVector = [endPoint[0] - controlPoint[0], endPoint[1] - controlPoint[1]];
+            let len_stcVector = Math.sqrt(stcVector[0] ** 2 + stcVector[1] ** 2);
+
+            console.log(vector, stcVector);
+            let vecAngle = Math.atan2(vector[1], -vector[0]);
+            let controlAngle = Math.atan2(stcVector[1], -stcVector[0]);
+            console.log(controlAngle, vecAngle);
+
+            let angleBetween = (stcVector[0] * vector[0] + stcVector[1] * vector[1]) / (len_stcVector * Math.sqrt(vector[0] ** 2 + vector[1] ** 2));
+            let frameCount = 0;
+
+            const framesPerOscillation = 120;
+
+            function animate() {
+                // ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.moveTo(...startPoint);
+
+                //plotted this in desmos.
+                //the idea is that it has two solutions, x = 0 and x = 120
+                //it goes from 0 to 1, so the parametric line will still make sense.
+                let progressCurve = Math.sin(frameCount / framesPerOscillation * Math.PI) ** 2;
+
+
+                let slidingStart = [startPoint[0] + progressCurve * stcVector[0], startPoint[1] + progressCurve * stcVector[1]];
+                let slidingEnd = [controlPoint[0] + progressCurve * cteVector[0], controlPoint[1] + progressCurve * cteVector[1]];
+                let slidingVec = [slidingEnd[0] - slidingStart[0], slidingEnd[1] - slidingStart[1]];
+
+                // ctx.beginPath();
+                // ctx.moveTo(...slidingStart);
+                // ctx.lineTo(...slidingEnd);
+                // ctx.stroke();
+
+                ctx.save();
+                if (frameCount > 60) {
+                    ctx.fillStyle = "white";
+                }
+                ctx.beginPath();
+                ctx.ellipse(slidingStart[0] + progressCurve * slidingVec[0], slidingStart[1] + progressCurve * slidingVec[1], 5, 5, 0, 0, 7);
+                ctx.fill();
+                ctx.restore();
+
+
+                ctx.beginPath();
+                ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(...startPoint);
+                ctx.lineTo(startPoint[0] + stcVector[0], startPoint[1] + stcVector[1]);
+                ctx.stroke();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(...controlPoint);
+                ctx.lineTo(...endPoint);
+                ctx.stroke();
+
+
+                frameCount++;
+                frameCount = frameCount % framesPerOscillation;
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+        }
+    }
+</script>
+<p>
+    And how did we do that? By interpolating the point along the line we just drew.
+    The further the swooping line swooped, the further along the swooping line we drew a point.
+</p>
+<p>
+    And from those lines we draw a point!
+    That's called a quadratic bezier curve, becuase it looks a bit like a parabola, a quadratic function.
+    Let's try the <span class="code">quadraticCurveTo</span> method that HTML canvas gives us, and see how it stacks up
+    to what we just drew.
+</p>
+<div style="text-align: center; width: 100%; margin: 0">
+    <canvas id="canvas7" style="width: 50%;" width="500" height="500"></canvas>
+</div>
+<script>
+    if (true) {
+        let canvas = document.getElementById("canvas7");
+        if (canvas instanceof HTMLCanvasElement) {
+            let ctx = canvas.getContext("2d");
+
+            ctx.lineWidth = 1.5;
+
+            let startPoint = [canvas.width / 4, canvas.height * 3 / 4];
+            let endPoint = [canvas.width * 3 / 4, canvas.height / 4];
+            let controlPoint = [canvas.width / 2 - 120 * Math.cos(Math.PI / 4), canvas.width / 2 - 200 * Math.sin(Math.PI / 4)];
+            let frameCount = 0;
+
+            const framesPerOscillation = 120;
+            ctx.beginPath();
+            ctx.ellipse(...startPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...endPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(...controlPoint, 5, 5, 0, 0, 7);
+            ctx.fill();
+
+
+            
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+            ctx.lineTo(...controlPoint);
+            ctx.stroke();
+
+
+            ctx.beginPath();
+            ctx.moveTo(...controlPoint);
+            ctx.lineTo(...endPoint);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(...startPoint);
+            ctx.quadraticCurveTo(...controlPoint, ...endPoint)
+            ctx.stroke();
+
+            frameCount++;
+            frameCount = frameCount % framesPerOscillation;
+        }
+    }
+</script>
+<p>
+    It looks exactly right!
+</p>
+
+${articleEnd}

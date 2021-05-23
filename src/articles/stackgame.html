@@ -45,6 +45,40 @@ ${articleMid}
     <button id="retryButton">Retry</button>
 </div>
 
+<br>
+<br>
+<p>
+    The game took a number of iterations before it became puzzle-like.
+    The first iteration of the game had a multiplication operator, which made the strategy pretty trivial.
+    You do whatever you can to find a 0 (maybe one is even in the stack at the start of the game) and then you spam multiply until you've won.
+</p>
+<p>
+    So I removed multiplication, leaving only addition and subtract 1 and negate.
+    This version ended up being perfectly solvable, which was surprising to me.
+    I only ever filled the stack with positive numbers at the beginning of the game, so all you had to do was make sure the top of the stack was negative (do the negation operation if it wasn't) and keep adding until the top of the stack is positive.
+    Then negate that number and continue.
+</p>
+<p>
+    So to fix this, I added negative numbers to the stack, and we arrive at the game as it stands.
+    There's more strategy and the solution isn't always obvious, so I'm pleased with it for being a good 5 minutes of fun. 
+    It's still solvable, meaning there is a blind algorithm that will always work, but the stack is big enough that the addition can be more tedious than trying to reason it out, which creates some more fun.
+</p>
+<p>
+    The most work for creating the game was generating initial states that are solvable.
+    Having two operations made it pretty easy, though.
+</p>
+<p>
+    I began by initializing a fake stack with a 0, and randomly selecting one of two methods to run.
+    Those two methods are the inverses of the operations the player is presented with.
+    The inverse of addition is to generate two numbers that add to another number,
+    and the inverse of subtract 1 and negate is to subtract 1 and negate.
+    It is its own inverse, which is cool.
+</p>
+<p>
+    So I start with an empty stack, and run those inverse methods until it produces a stack full of random numbers.
+    If you do the right sequence of operations, un-doing the inverse operations, you will have to end at an empty stack, and you will win the game.
+</p>
+
 <script>
 
     class Stack {
