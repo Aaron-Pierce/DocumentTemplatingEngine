@@ -142,13 +142,12 @@ ${articleMid}
 <p>
     We could add another vector!
     We parameterize a line by pointing a vector between the first and second points and moving along them.
-    Let's point another vector towards the control point!
+    We could just as easily add a third vector that points towards the control point.
 </p>
 <p>
-    If we point a constant vector towards it, we'll just miss our second point.
+    However, if we point a constant vector towards it, we'll just miss our second point.
     We need to vary this vector somehow, and we need this variation to be parabolic.
-    The vector should have no effect at the endpoints, and maximal effect at the nearest point to the third point
-    (called the control point).
+    The vector should have no effect at the endpoints, and maximal effect at the nearest point to the control point.
 </p>
 <p>
     That's a lot of math, though. We need to project the control point onto the line, find where it should be maximally
@@ -159,16 +158,16 @@ ${articleMid}
     (And I only discovered this problem implementing the above idea)
     The curve we need isn't actually parabolic!
     Depending on where the point is along the line, you need your 'parabolic' curve to lean towards that.
-    And because we need the endpoints of our straight line to be solutions to this parabola, this only works if the
-    point is in the middle.
+    And because we need the endpoints of our straight line to be the zeroes of this parabola, this only works if the
+    control point is exactly in the middle of the line.
     Therefore, we need a smooth curve that shares endpoints with a straight line and bends towards the control point.
 </p>
 <p>
-    So to build a smooth curve pulled towards the point, requires another smooth curve pulled towards the point, if we
+    So to build a smooth curve pulled towards a control point, we need another smooth curve pulled towards the control point, if we
     do it this way.
 </p>
 <p>
-    There's an easier way.
+    That won't work, but there is another way.
     Let's draw a line from the start point to the control, and from the control to the end point.
 </p>
 <div style="text-align: center; width: 100%; margin: 0">
@@ -413,8 +412,8 @@ ${articleMid}
     The further the swooping line swooped, the further along the swooping line we drew a point.
 </p>
 <p>
-    And from those lines we draw a point!
-    That's called a quadratic bezier curve, becuase it looks a bit like a parabola, a quadratic function.
+    And after plotting each of those points, we got a good looking curve!
+    We ended up building a quadratic bezier curve, becuase it looks a bit like a parabola, which is a quadratic function.
     Let's try the <span class="code">quadraticCurveTo</span> method that HTML canvas gives us, and see how it stacks up
     to what we just drew.
 </p>
@@ -472,6 +471,12 @@ ${articleMid}
 </script>
 <p>
     It looks exactly right!
+</p>
+<p>
+    It turns out that the <span class="code">quadraticCurveTo</span> and <span class="code">bezierCurveTo</span> methods both draw a bezier curve.
+    We just saw an instance of a quadratic bezier curve, which has 1 control point.
+    The <span class="code">bezierCurveTo</span> method draws another bezier curve, but with two control points (it's cubic).
+    That's why you need two methods, so that you can use a different number of control points.
 </p>
 
 ${articleEnd}

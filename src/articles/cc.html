@@ -4,17 +4,49 @@ ${articleOpen}
 ${articleMid}
 !{makeTitle}[ADD A TITLE][May 22, 2021]
 
-<canvas style="width: 100%;" id="canvas" width="1000" height="1000"></canvas>
+<canvas style="width: 100%; border: 2px solid black;" id="canvas" width="1000" height="1000"></canvas>
 <script>
     let canvas = document.getElementById("canvas");
 
+    let frameCount = 0;
 
     function animate() {
         if (!(canvas instanceof HTMLCanvasElement)) return;
         let ctx = canvas.getContext('2d');
+        ctx.lineWidth = 2.5;
 
-        // ctx.
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
 
+
+        const NUM_POINTS = 6;
+        let points = [];
+
+        let RADIUS = 300;
+        for (let i = 0; i < NUM_POINTS; i++) {
+            let theta = i * (2 * Math.PI) / 6 + (frameCount / 60);
+            let point = [canvas.width / 2 + RADIUS * Math.cos(theta), canvas.height / 2 - RADIUS * Math.sin(theta)];
+            ctx.beginPath();
+            ctx.ellipse(...point, 5, 5, 0, 0, 7);
+            ctx.fill();
+            points.push(point);
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(...points[0]);
+        for (let i = 0; i < NUM_POINTS; i++) {
+            let theta = i * (2 * Math.PI) / 6 + (frameCount / 60);
+            let oppositePoints = [points[(i + 3) % points.length], points[(i + 4) % points.length]]
+            let averagePoint = [(oppositePoints[1][0] + oppositePoints[0][0]) / 2, (oppositePoints[1][1] + oppositePoints[0][1]) / 2]
+            ctx.quadraticCurveTo(...averagePoint, ...points[(i + 1) % points.length]);
+            ctx.stroke();
+        }
+
+        ctx.stroke();
+
+        frameCount++;
+        requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
 </script>

@@ -1,0 +1,118 @@
+${articleOpen}
+!{makeMeta}[Flow Fields>][Making flow field art]
+<script src="/simplexNoise.js"></script>
+${articleMid}
+!{makeTitle}[Flow Fields][June 15, 2021]
+
+<canvas id="one" style="width: 100%; height: auto;" width="1000" height="1000"></canvas>
+
+<script>
+    let canvas = document.getElementById("one");
+    let seed = Date.now();
+    let openSimplex = openSimplexNoise(seed);
+    console.log("Seed:", seed);
+
+    let frameCount = 0;
+    if (canvas instanceof HTMLCanvasElement) {
+        let width = canvas.width;
+        let height = canvas.height;
+        console.log(width, height);
+
+        const step = 150;
+
+        let ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
+        ctx.lineWidth = 5;
+
+        ctx.strokeStyle = "rgb(50, 40, 250)";
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        for (let x = -0.5 * width; x < width * 1.5; x += step) {
+            for (let y = -0.5 * height; y < height * 1.5; y += step) {
+                drawPath(canvas, ctx, [x, y]);
+            }
+        }
+
+        // for(let p = 0; p < 100; p++){
+        //     let randX = Math.random() * width * 2 - width / 2;
+        //     let randY = Math.random() * height * 2 - height / 2;
+        //     drawPath(canvas, ctx, [randX, randY]);
+        // }
+
+
+        // let startPoint = [Math.random() * width / 2 + width / 4, Math.random() * height / 2 + height / 4];
+        // let queue = [startPoint];
+        // for (let i = 0; i < 250; i++) {
+        //     let thisPoint = queue.shift();
+
+        //     // ctx.save();
+        //     // ctx.beginPath();
+        //     // ctx.ellipse(...thisPoint, 10, 10, 0, 0, 7);
+        //     // ctx.strokeStyle = 'red';
+        //     // ctx.stroke();
+        //     // ctx.restore();
+        //     let newPoints = drawPath(canvas, ctx, thisPoint);
+        //     queue.push(...newPoints);
+        // }
+
+        // for (let x = 0; x < width; x += 100) {
+        //     for (let y = 0; y < height; y += 100) {
+        //         drawPath(canvas, ctx, [x, y]);
+        //     }
+        // }
+
+    }
+
+    function isInBounds(canvas, point) {
+        const buffer = 5;
+        if (point[0] < 0 - buffer || point[1] < 0 - buffer) return false;
+        if (point[0] > canvas.width + buffer || point[1] > canvas.height + buffer) return false;
+        return true;
+    }
+
+
+    function drawHalfPath(canvas, ctx, point, isPositive) {
+        let intermediatePoint = [point[0], point[1]];
+        let signFlip = isPositive ? 1 : -1;
+        // let maxSteps = 50 / Math.sqrt(Math.random() * 100);
+        let maxSteps = 2000;
+        const stepsPerBreak = 10;
+        let stepsSinceBreak = 0;
+        let steps = 0;
+        // ctx.beginPath();
+        // ctx.moveTo(...intermediatePoint);
+        while (isInBounds(canvas, intermediatePoint)) {
+            let theta = 2 * Math.PI * openSimplex.noise2D(intermediatePoint[0] / canvas.width / 2, intermediatePoint[1] / canvas.height / 2);
+            intermediatePoint[0] += 1 * Math.cos(theta) * signFlip;
+            intermediatePoint[1] += -1 * Math.sin(theta) * signFlip;
+
+            // ctx.lineTo(...intermediatePoint);
+
+            stepsSinceBreak++;
+            if (stepsSinceBreak === stepsPerBreak) {
+                stepsSinceBreak = 0;
+                let perpTheta = theta + (signFlip * Math.PI / 2);
+                ctx.beginPath();
+                ctx.ellipse(...intermediatePoint, stepsPerBreak/3, stepsPerBreak/3, 0, 0, 7);
+                ctx.stroke();
+            }
+
+            steps++;
+            if (steps > maxSteps) {
+                break;
+            }
+        }
+    }
+
+    function drawPath(canvas, ctx, point) {
+        // ctx.lineWidth = 0.5 + 2 * Math.sin(10 * Math.random())**2;
+        ctx.strokeStyle = "rgb(" + 255 * Math.random() + ", " + 255 * Math.random() + ", " + 255 * Math.random() + ")";
+        // console.log("StrokeStyle: ", ctx.strokeStyle);
+        ctx.lineWidth = 2.5;
+        drawHalfPath(canvas, ctx, point, true);
+        drawHalfPath(canvas, ctx, point, false);
+    }
+</script>
+
+${articleEnd}

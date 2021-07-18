@@ -9,6 +9,7 @@
 // use actix_files as fs;
 use actix_web::{App, HttpServer};
 use notify::{watcher, RecursiveMode, Watcher};
+use std::fmt::format;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 mod compiler;
@@ -24,14 +25,18 @@ async fn main() -> std::io::Result<()> {
 
     compiler.interpret_arguments(&mut args);
 
+    let port = "8080";
+
     HttpServer::new(|| {
         App::new()
             .service(actix_files::Files::new("/public", "./src/public/"))
             .service(actix_files::Files::new("/", "./built"))
     })
-    .bind("192.168.1.4:8080")?
-    .bind("127.0.0.1:8080")?
+    .bind(format!("{}{}", "192.168.1.4:", port))?
+    .bind(format!("{}{}", "127.0.0.1:", port))?
     .run();
+
+    println!("Running server on port: {}", port);
 
     // Create a channel to receive the events.
     let (tx, rx) = channel();
