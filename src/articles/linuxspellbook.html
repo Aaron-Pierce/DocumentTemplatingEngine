@@ -1,0 +1,31 @@
+${articleOpen}
+!{makeMeta}[Linux Command Line Spellbook - apierce.dev][A magical introduction to using a Linux command line]
+${articleMid}
+!{makeTitle}[The Linux Command Line Spellbook][August 1, 2021]
+
+<p>
+    Magic exerts some will on the physical world. In our case, this world is your very own Linux based operating system.
+    This spellbook is an effort to record all I know about:
+    <ul>
+        <li>Teleporting about your filesystem</li>
+        <li>Creating, manipulating, destroying, and searching for files</li>
+        <li>Placing protective wards on your files</li>
+    </ul>
+</p>
+
+<h2>Teleportation</h2>
+<p>
+    Changing your position within your files requires only naming your destination.
+    Performing <span class="code">cd [destination]</span> shall teleport you there.
+    (<span class="code">cd</span> is short for change directory).
+    A special symbol has been reserved to refer to your home. 
+    A tilde, <span class="code">~</span>, will be interpreted as the path to your home directory.
+    This path can be further navigated from, such as <span class="code">~/Downloads</span>, which refrences the Downloads folder in your home directory.
+    If you wished to teleport to your home directory, you need only perform <span class="code">cd ~</span>.
+    Doing this is so common that specifying no destination to <span class="code">cd</span> will teleport you home.
+</p>
+<p>
+    Similarly, the <span class="code">.</span> symbol has been reserved to mean your current directory, and the <span class="code">..</span> symbol means the parent directory above the one you are in.
+    These can also be built upon. <span class="code">../../</span> refers to the directory two steps above the one you are currently in
+</p>
+${articleEnd}

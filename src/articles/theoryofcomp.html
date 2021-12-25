@@ -1,0 +1,120 @@
+${articleOpen} !{makeMeta}[Transforming Magic to Mundane, by Your OwnHand][Inventing the NFA to DFA transition]
+
+${articleMid}
+!{makeTitle}[Transforming Magic to Mundane, by Your Own Hand][October 10, 2021]
+
+<p>
+	Imagine a machine that, given an input, can instantly determine whether or not
+	an input satisfies some condition. You hand it a 1,000,000 digit binary
+	string, it can immediately tell you whether or not it is divisible by 1535235.
+</p>
+<p>
+	No backtracking? It doesn't have to factor? Magic, you would say! How would I
+	get my hands on such a thing?
+</p>
+<p>Well, uh, it doesn't exist. But if it did, it would look like this.</p>
+
+<canvas
+	id="canvas1"
+	style="width: 100%; height: auto"
+	width="1000"
+	height="1000"
+></canvas>
+<script>
+	let canvas = document.getElementById("canvas1");
+	const width = canvas.width;
+	const height = canvas.height;
+	if (canvas instanceof HTMLCanvasElement) {
+		let ctx = canvas.getContext("2d");
+
+		drawAutomaton(
+			[
+				["a", "b", "c", "d", "e", "f"],
+				["0", "1"],
+				{
+					a: [
+						[0, "c"],
+						[1, "b"],
+					],
+					b: [
+						[0, "c"],
+						[1, "d"],
+					],
+					c: [
+						[0, "f"],
+						[1, "b"],
+					],
+					d: [
+						[0, "a"],
+						[1, "e"],
+					],
+					e: [
+						[0, "b"],
+						[1, "c"],
+					],
+					f: [
+						[0, "a"],
+						[1, "c"],
+					],
+				},
+			],
+			ctx
+		);
+	}
+
+	function drawAutomaton(arr, ctx) {
+    // arr is the automaton 5-tuple
+		// States, symbols, transition, start state, accepting states
+		if (ctx instanceof CanvasRenderingContext2D) {
+			ctx.save();
+			let stateArr = arr[0];
+			let stateNodes = {};
+			const circleRadius = 350;
+			const nodeRadius = 50;
+			for (let i = 0; i < stateArr.length; i++) {
+				console.log("drawing ", stateArr[i]);
+				let ratio = i / stateArr.length;
+				ctx.beginPath();
+				ctx.ellipse(
+					width/2 + circleRadius * Math.cos(ratio * 2 * Math.PI),
+					height/2 + circleRadius * Math.sin(ratio * 2 * Math.PI),
+					nodeRadius,
+					nodeRadius,
+					0,
+					0,
+					7
+				);
+				stateNodes[stateArr[i]] = {
+					x: width/2 + circleRadius * Math.cos(ratio * 2 * Math.PI),
+					y: height/2 + circleRadius * Math.sin(ratio * 2 * Math.PI),
+				};
+				ctx.stroke();
+			}
+
+			let transitions = arr[2];
+			for (let state of stateArr) {
+				let edges = transitions[state];
+				for (let e of edges) {
+					let symbol = e[0];
+					let destination = e[1];
+					let destObj = stateNodes[destination];
+					let angle = Math.atan2(destObj.y - stateNodes[state].y, destObj.x - stateNodes[state].x);
+					ctx.beginPath();
+					ctx.moveTo(stateNodes[state].x + 1.5*nodeRadius*Math.cos(angle), stateNodes[state].y + 1.5*nodeRadius*Math.sin(angle));
+					ctx.lineTo(destObj.x - 1.5*nodeRadius*Math.cos(angle), destObj.y - 1.5*nodeRadius*Math.sin(angle));
+					ctx.stroke();
+
+					ctx.beginPath();
+					ctx.moveTo(destObj.x - 1.5*nodeRadius*Math.cos(angle), destObj.y - 1.5*nodeRadius*Math.sin(angle));
+					ctx.lineTo(destObj.x - 1.5*nodeRadius*Math.cos(angle) - 30*Math.cos(angle + Math.PI/6), destObj.y - 1.5*nodeRadius*Math.sin(angle) - 30*Math.sin(angle + Math.PI/6));
+					ctx.stroke();
+					ctx.moveTo(destObj.x - 1.5*nodeRadius*Math.cos(angle), destObj.y - 1.5*nodeRadius*Math.sin(angle));
+					ctx.lineTo(destObj.x - 1.5*nodeRadius*Math.cos(angle) - 30*Math.cos(angle - Math.PI/6), destObj.y - 1.5*nodeRadius*Math.sin(angle) - 30*Math.sin(angle - Math.PI/6));
+					ctx.stroke();
+				}
+			}
+		}
+	}
+</script>
+
+${articleEnd}

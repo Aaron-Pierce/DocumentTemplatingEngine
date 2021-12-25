@@ -1,15 +1,10 @@
 #![warn(
-    clippy::all,
-    clippy::restriction,
-    clippy::pedantic,
-    clippy::nursery,
-    clippy::cargo
+    clippy::all
 )]
 
 // use actix_files as fs;
 use actix_web::{App, HttpServer};
 use notify::{watcher, RecursiveMode, Watcher};
-use std::fmt::format;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 mod compiler;
@@ -32,7 +27,6 @@ async fn main() -> std::io::Result<()> {
             .service(actix_files::Files::new("/public", "./src/public/"))
             .service(actix_files::Files::new("/", "./built"))
     })
-    .bind(format!("{}{}", "192.168.1.4:", port))?
     .bind(format!("{}{}", "127.0.0.1:", port))?
     .run();
 

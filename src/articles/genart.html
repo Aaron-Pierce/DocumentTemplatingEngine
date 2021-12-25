@@ -1,0 +1,99 @@
+${articleOpen} 
+!{makeMeta}[Generative Art - apierce.dev][A work of generative art] 
+${articleMid} !{makeTitle}[ADD A TITLE][July 17, 2021]
+
+<canvas id="canvas" width="1500" height="1500" style="width: 100%"></canvas>
+
+<script>
+  let canvas = document.getElementById("canvas");
+  if (canvas instanceof HTMLCanvasElement) {
+    let ctx = canvas.getContext("2d");
+
+    function strokePath(path) {
+      ctx.lineCap = "round";
+      ctx.lineWidth = 50;
+      ctx.strokeStyle = "black"
+      ctx.stroke(path);
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 25;
+      ctx.stroke(path);
+    }
+
+    ctx.strokeStyle = "rgb(0, 0, 0)";
+    ctx.fillStyle = "rgb(255, 255, 255)";
+
+    ctx.lineWidth = 50;
+
+    let path = new Path2D();
+
+    let randomPoint = [
+      Math.floor((Math.random() * canvas.width) / 2 + canvas.width / 4),
+      Math.floor((Math.random() * canvas.height) / 2 + canvas.height / 4),
+    ];
+
+    let point = randomPoint;
+    let radius = Math.random() * 25 + 25;
+    let startAngle = 0;
+    let deltaTheta = Math.random() * Math.PI + Math.PI / 2;
+    let lastWasCW = false;
+    for (let i = 0; i < 20; i++) {
+      path.arc(
+        ...point,
+        radius,
+        startAngle,
+        startAngle + deltaTheta,
+        lastWasCW
+      );
+      point[0] = point[0] + radius * Math.cos(startAngle + deltaTheta);
+      point[1] = point[1];
+
+      radius = Math.random() * 100 + 25;
+
+      point = [
+        point[0] + radius * Math.cos(startAngle + deltaTheta),
+        point[1] + radius * Math.sin(startAngle + deltaTheta),
+      ];
+
+      startAngle = Math.atan2(point[1] - point[1], point[0] - point[0]);
+
+      deltaTheta = Math.random() * Math.PI + Math.PI / 2;
+      lastWasCW = !lastWasCW;
+      strokePath(path);
+    }
+
+    // ctx.fillStyle = "black";
+    // ctx.ellipse(...point, 5, 5, 0, 0, 8);
+    // ctx.fill();
+
+    // let randomRadius = Math.random() * 100 + 25;
+    // ctx.strokeStyle = "black";
+    // ctx.lineWidth = 15;
+    // ctx.beginPath();
+    // ctx.moveTo(...point);
+    // let nextCenter = [
+    //   point[0] + randomRadius * Math.cos(startAngle + deltaTheta),
+    //   point[1] + randomRadius * Math.sin(startAngle + deltaTheta),
+    // ];
+    // ctx.lineTo(...nextCenter);
+    // let thatAngle = Math.atan2(
+    //   point[1] - nextCenter[1],
+    //   point[0] - nextCenter[0]
+    // );
+    // ctx.arc(...nextCenter, randomRadius, thatAngle, thatAngle + Math.PI, true);
+    // console.log((thatAngle * 180) / Math.PI);
+    // ctx.stroke();
+
+    // ctx.ellipse(...lastPoint, 25, 25, 0, 0, 7);
+    // ctx.fillStyle = "black";
+    // ctx.strokeStyle = "black";
+    // ctx.fill();
+
+    // ctx.beginPath();
+    // ctx.moveTo(...lastPoint);
+    // ctx.lineTo()
+    // ctx.stroke();
+    // // ctx.fill();
+  }
+</script>
+
+${articleEnd}
